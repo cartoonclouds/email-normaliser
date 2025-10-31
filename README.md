@@ -10,9 +10,10 @@ A comprehensive email normalization and validation library with Vue 3 directives
 🤖 **AI Domain Suggestions**: Machine learning-powered typo correction for email domains  
 ⚡ **Vue 3 Integration**: Ready-to-use composables and directives  
 🌳 **Tree Shakeable**: Import only what you need  
-📱 **TypeScript Support**: Full type safety with comprehensive type definitions  
+📱 **TypeScript Support**: Full type safety with comprehensive JSDoc documentation  
 🎯 **67+ Domain Corrections**: Built-in fixes for common email provider typos  
 🌐 **51+ TLD Corrections**: Smart handling of TLD misspellings  
+📚 **Comprehensive Documentation**: Detailed JSDoc for all types, functions, and constants  
 
 ## Installation
 
@@ -116,11 +117,20 @@ import { EmailDirective } from '@cartoonclouds/contact-normalisers'
 Normalize and validate an email address with comprehensive error checking.
 
 ```typescript
+/**
+ * Result object returned by the email normalization process.
+ * Contains the normalized email address, validation status, and detailed
+ * information about all transformations that were applied during processing.
+ */
 interface EmailNormResult {
-  email: string | null      // Normalized email or null if invalid
-  valid: boolean           // Whether the email is valid
-  changes: string[]        // Human-readable list of changes made
-  changeCodes: EmailChangeCode[] // Machine-readable change codes
+  /** The normalized email address, or null if normalization failed */
+  email: string | null
+  /** Whether the final normalized email passes validation */
+  valid: boolean
+  /** Human-readable descriptions of all changes made during normalization */
+  changes: string[]
+  /** Machine-readable codes for all changes made during normalization */
+  changeCodes: EmailChangeCode[]
 }
 
 const result = normaliseEmail('User@GMAIL.CO', {
@@ -130,6 +140,14 @@ const result = normaliseEmail('User@GMAIL.CO', {
     block: { exact: ['spam.com'] } 
   }
 })
+
+// Example result:
+// {
+//   email: 'User@gmail.com',
+//   valid: true,
+//   changes: ['Corrected common domain or TLD typos', 'Lowercased domain part'],
+//   changeCodes: ['fixed_domain_and_tld_typos', 'lowercased_domain']
+// }
 ```
 
 **Built-in Corrections:**
@@ -146,9 +164,27 @@ const result = normaliseEmail('User@GMAIL.CO', {
 Validate an email address and return detailed validation results.
 
 ```typescript
+/**
+ * Array of validation results from all validation checks performed on an email address.
+ * If the email is valid, contains a single ValidationResult with isValid: true.
+ * If invalid, contains one or more ValidationResult objects describing each failure.
+ */
+type ValidationResults = Array<{
+  /** Whether this specific validation check passed */
+  isValid: boolean
+  /** The specific validation code that was triggered */
+  validationCode: EmailValidationCode
+  /** Human-readable explanation of the validation result */
+  validationMessage: string
+}>
+
 const results = validateEmail('user@invalid-domain.test')
-// Returns array of validation results:
-// [{ isValid: false, validationCode: 'BLOCKLISTED', validationMessage: '...' }]
+// Example result:
+// [{
+//   isValid: false, 
+//   validationCode: 'BLOCKLISTED', 
+//   validationMessage: 'Email domain is blocklisted.'
+// }]
 ```
 
 **Validation Checks:**
@@ -224,13 +260,50 @@ Full-featured Vue directive for automatic email processing.
 </template>
 ```
 
+## TypeScript Support & Documentation
+
+This library is built with TypeScript-first design and includes comprehensive JSDoc documentation for all types, functions, and constants. Every type is thoroughly documented with:
+
+- **Detailed descriptions** of purpose and usage
+- **Practical code examples** showing real-world usage
+- **Property explanations** with type information
+- **Parameter documentation** for all functions
+- **Return type details** with example structures
+
+### Enhanced Type Definitions
+
+All types include rich JSDoc comments for better IntelliSense support:
+
+```typescript
+/**
+ * Enumeration of all possible email normalization change codes.
+ * These machine-readable codes represent specific transformations that can be
+ * applied during the email normalization process.
+ */
+export const EmailChangeCodes = Object.freeze({
+  /** Email input was empty or only whitespace */
+  EMPTY: 'empty',
+  /** Replaced obfuscated "at" and "dot" text with @ and . symbols */
+  DEOBFUSCATED_AT_AND_DOT: 'deobfuscated_at_and_dot',
+  /** Applied domain and TLD typo corrections from the fix mappings */
+  FIXED_DOMAIN_AND_TLD_TYPOS: 'fixed_domain_and_tld_typos',
+  // ... and more
+} as const)
+```
+
 ### Constants & Configuration
 
-The library includes comprehensive built-in correction lists for common email typos and validation rules.
+The library includes comprehensive built-in correction lists for common email typos and validation rules. All constants are fully documented with JSDoc.
 
 #### Default Domain Corrections (67 corrections)
 
 ```typescript
+/**
+ * Default domain correction mappings for common email provider typos and variations.
+ * This object contains mappings from commonly misspelled or variant domain names
+ * to their correct counterparts. It includes typos for major email providers
+ * like Gmail, Hotmail, Outlook, Yahoo, iCloud, and others.
+ */
 import { DEFAULT_FIX_DOMAINS } from '@cartoonclouds/contact-normalisers'
 ```
 
@@ -362,6 +435,12 @@ import { DEFAULT_FIX_DOMAINS } from '@cartoonclouds/contact-normalisers'
 #### Default TLD Corrections (51 corrections)
 
 ```typescript
+/**
+ * Default Top-Level Domain (TLD) correction mappings for common typos.
+ * This object contains mappings from commonly misspelled TLD endings
+ * to their correct counterparts. It helps fix typos in email addresses
+ * where users have mistyped the domain extension.
+ */
 import { DEFAULT_FIX_TLDS } from '@cartoonclouds/contact-normalisers'
 ```
 
@@ -464,6 +543,12 @@ import { DEFAULT_FIX_TLDS } from '@cartoonclouds/contact-normalisers'
 #### Default Blocklist Configuration
 
 ```typescript
+/**
+ * Default email blocklist configuration to prevent invalid or unwanted email addresses.
+ * This configuration defines patterns for blocking certain types of email addresses,
+ * including test domains, temporary email services, and example domains that should
+ * not be used in production environments.
+ */
 import { DEFAULT_BLOCKLIST } from '@cartoonclouds/contact-normalisers'
 
 {

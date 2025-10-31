@@ -5,28 +5,101 @@ import {
 } from './constants'
 
 // --- types and constants ------------------------------------------
+
+/**
+ * Result object returned by the email normalization process.
+ *
+ * Contains the normalized email address, validation status, and detailed
+ * information about all transformations that were applied during processing.
+ *
+ * @example
+ * ```typescript
+ * const result = normaliseEmail('User@GMAIL.CO')
+ * // result = {
+ * //   email: 'User@gmail.com',
+ * //   valid: true,
+ * //   changes: ['Corrected common domain or TLD typos', 'Lowercased domain part'],
+ * //   changeCodes: ['fixed_domain_and_tld_typos', 'lowercased_domain']
+ * // }
+ * ```
+ */
 export type EmailNormResult = {
+  /** The normalized email address, or null if normalization failed */
   email: string | null
+  /** Whether the final normalized email passes validation */
   valid: boolean
+  /** Human-readable descriptions of all changes made during normalization */
   changes: string[]
+  /** Machine-readable codes for all changes made during normalization */
   changeCodes: EmailChangeCode[]
 }
 
+/**
+ * Enumeration of all possible email normalization change codes.
+ *
+ * These machine-readable codes represent specific transformations that can be
+ * applied during the email normalization process. Each code corresponds to a
+ * specific step in the normalization pipeline.
+ *
+ * @example
+ * ```typescript
+ * const result = normaliseEmail('User (comment) at gmail dot com')
+ * // result.changeCodes might include:
+ * // ['stripped_display_name_and_comments', 'deobfuscated_at_and_dot', 'lowercased_domain']
+ * ```
+ */
 export const EmailChangeCodes = Object.freeze({
+  /** Email input was empty or only whitespace */
   EMPTY: 'empty',
+  /** Email was blocked by the configured blocklist */
   BLOCKED_BY_LIST: 'blocked_by_list',
+  /** Replaced obfuscated "at" and "dot" text with @ and . symbols */
   DEOBFUSCATED_AT_AND_DOT: 'deobfuscated_at_and_dot',
+  /** Applied domain and TLD typo corrections from the fix mappings */
   FIXED_DOMAIN_AND_TLD_TYPOS: 'fixed_domain_and_tld_typos',
+  /** Email format was invalid and could not be normalized */
   INVALID_EMAIL_SHAPE: 'invalid_email_shape',
+  /** Converted domain part to lowercase */
   LOWERCASED_DOMAIN: 'lowercased_domain',
+  /** Converted Unicode symbols (＠, ．, 。) to ASCII equivalents */
   NORMALIZED_UNICODE_SYMBOLS: 'normalized_unicode_symbols',
+  /** Removed display names, comments, or angle bracket formatting */
   STRIPPED_DISPLAY_NAME_AND_COMMENTS: 'stripped_display_name_and_comments',
+  /** Cleaned up spacing, punctuation, and formatting issues */
   TIDIED_PUNCTUATION_AND_SPACING: 'tidied_punctuation_and_spacing',
 } as const)
 
+/**
+ * Type representing any valid email change code from the EmailChangeCodes enumeration.
+ *
+ * This is a union type of all possible change code values that can be returned
+ * during email normalization.
+ */
 export type EmailChangeCode =
   (typeof EmailChangeCodes)[keyof typeof EmailChangeCodes]
 
+/**
+ * Configuration object for email domain and pattern blocking.
+ *
+ * Defines rules for blocking unwanted email addresses using various matching
+ * strategies including exact matches, suffix patterns, wildcard patterns, and
+ * TLD-based blocking. Also supports allowlist overrides.
+ *
+ * @example
+ * ```typescript
+ * const blockConfig: EmailBlockConfig = {
+ *   block: {
+ *     exact: ['spam.com', 'fake.domain'],
+ *     suffix: ['.temp', '.test'],
+ *     wildcard: ['*.mailinator.*', '*.throwaway.*'],
+ *     tlds: ['.invalid', '.test']
+ *   },
+ *   allow: {
+ *     exact: ['important.test'] // Override block rules for specific domains
+ *   }
+ * }
+ * ```
+ */
 export type EmailBlockConfig = {
   block?: {
     /**
@@ -52,9 +125,31 @@ export type EmailBlockConfig = {
      */
     tlds?: string[]
   }
-  allow?: { exact?: string[] } // allow overrides block
+  /** Allowlist configuration that overrides block rules for specific domains */
+  allow?: {
+    /** Exact domain matches that should be allowed despite being in block rules */
+    exact?: string[]
+  }
 }
 
+/**
+ * Configuration options for email normalization behavior.
+ *
+ * Allows customization of the normalization process by providing custom
+ * domain corrections, TLD corrections, and blocklist rules that will be
+ * merged with the default configurations.
+ *
+ * @example
+ * ```typescript
+ * const options: EmailNormOptions = {
+ *   fixDomains: { 'mytypo.com': 'correct.com' },
+ *   fixTlds: { '.typo': '.com' },
+ *   blocklist: {
+ *     block: { exact: ['unwanted.domain'] }
+ *   }
+ * }
+ * ```
+ */
 export type EmailNormOptions = {
   /**
    * Blocklist configuration for email validation (merges with default).
@@ -76,14 +171,22 @@ export type EmailNormOptions = {
   fixTlds?: Record<string, string>
 }
 
+/**
+ * Result object returned by individual email transformation functions.
+ *
+ * Used internally by normalization helper functions to indicate whether
+ * a specific transformation was applied and what the resulting string is.
+ *
+ * @example
+ * ```typescript
+ * const result = toAsciiLike('user＠domain．com')
+ * // result = { out: 'user@domain.com', changed: true }
+ * ```
+ */
 export type EmailFixResult = {
-  /**
-   * The fixed email address.
-   */
+  /** The transformed email string after applying the fix */
   out: string
-  /**
-   * Whether any changes were made.
-   */
+  /** Whether any changes were made during the transformation */
   changed: boolean
 }
 

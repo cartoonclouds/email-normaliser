@@ -6,24 +6,85 @@ import {
 import type { EmailBlockConfig } from './normaliseEmail'
 
 // --- types -------------------------------------------------------
+
+/**
+ * Enumeration of all possible email validation result codes.
+ *
+ * These codes represent the different validation states an email address
+ * can have during the validation process. Each code corresponds to a
+ * specific validation check.
+ *
+ * @example
+ * ```typescript
+ * const results = validateEmail('user@invalid-domain')
+ * // results[0].validationCode might be EmailValidationCodes.INVALID_DOMAIN
+ * ```
+ */
 export const EmailValidationCodes = Object.freeze({
+  /** Email address passed all validation checks */
   VALID: 'VALID',
+  /** Email input was empty or only whitespace */
   EMPTY: 'EMPTY',
+  /** Email format does not match valid email structure */
   INVALID_FORMAT: 'INVALID_FORMAT',
+  /** Email domain is in the configured blocklist */
   BLOCKLISTED: 'BLOCKLISTED',
+  /** Email domain matches a known typo in the corrections list */
   INVALID_DOMAIN: 'INVALID_DOMAIN',
+  /** Email TLD matches a known typo in the corrections list */
   INVALID_TLD: 'INVALID_TLD',
 } as const)
 
+/**
+ * Type representing any valid email validation code from the EmailValidationCodes enumeration.
+ *
+ * This is a union type of all possible validation code values that can be returned
+ * during email validation.
+ */
 export type EmailValidationCode =
   (typeof EmailValidationCodes)[keyof typeof EmailValidationCodes]
 
+/**
+ * Individual validation result for a specific validation check.
+ *
+ * Contains the validation status, the specific validation code that was triggered,
+ * and a human-readable message explaining the validation result.
+ *
+ * @example
+ * ```typescript
+ * const result: ValidationResult = {
+ *   isValid: false,
+ *   validationCode: EmailValidationCodes.INVALID_FORMAT,
+ *   validationMessage: 'Email is not in a valid format.'
+ * }
+ * ```
+ */
 type ValidationResult = {
+  /** Whether this specific validation check passed */
   isValid: boolean
+  /** The specific validation code that was triggered */
   validationCode: EmailValidationCode
+  /** Human-readable explanation of the validation result */
   validationMessage: string
 }
 
+/**
+ * Array of validation results from all validation checks performed on an email address.
+ *
+ * If the email is valid, this will contain a single ValidationResult with isValid: true.
+ * If the email is invalid, this will contain one or more ValidationResult objects
+ * describing each validation failure.
+ *
+ * @example
+ * ```typescript
+ * const results: ValidationResults = validateEmail('invalid@')
+ * // results = [{
+ * //   isValid: false,
+ * //   validationCode: 'INVALID_FORMAT',
+ * //   validationMessage: 'Email is not in a valid format.'
+ * // }]
+ * ```
+ */
 type ValidationResults = ValidationResult[]
 
 // --- helpers -------------------------------------------------------

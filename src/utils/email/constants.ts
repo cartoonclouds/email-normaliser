@@ -1,5 +1,30 @@
 import type { EmailBlockConfig } from './normaliseEmail'
 
+/**
+ * Default domain correction mappings for common email provider typos and variations.
+ *
+ * This object contains mappings from commonly misspelled or variant domain names
+ * to their correct counterparts. It includes typos for major email providers
+ * like Gmail, Hotmail, Outlook, Yahoo, iCloud, and others.
+ *
+ * @example
+ * ```typescript
+ * // "gamil.com" will be corrected to "gmail.com"
+ * // "hotmial.com" will be corrected to "hotmail.com"
+ * normaliseEmail('user@gamil.com') // Returns email normalized to 'user@gmail.com'
+ * ```
+ *
+ * Categories included:
+ * - Gmail variations (15 mappings)
+ * - Hotmail variations (9 mappings)
+ * - Outlook variations (9 mappings)
+ * - Yahoo variations (9 mappings)
+ * - iCloud variations (7 mappings)
+ * - UK domain variations (6 mappings)
+ * - Other providers (9 mappings)
+ * - Business domains (3 mappings)
+ * - Additional typos (4 mappings)
+ */
 export const DEFAULT_FIX_DOMAINS: Record<string, string> = {
   // Gmail variations
   'gamil.com': 'gmail.com',
@@ -91,6 +116,29 @@ export const DEFAULT_FIX_DOMAINS: Record<string, string> = {
   'msn.con': 'msn.com',
 }
 
+/**
+ * Default Top-Level Domain (TLD) correction mappings for common typos.
+ *
+ * This object contains mappings from commonly misspelled TLD endings
+ * to their correct counterparts. It helps fix typos in email addresses
+ * where users have mistyped the domain extension.
+ *
+ * @example
+ * ```typescript
+ * // ".con" will be corrected to ".com"
+ * // ".co,uk" will be corrected to ".co.uk"
+ * normaliseEmail('user@example.con') // Returns email normalized to 'user@example.com'
+ * ```
+ *
+ * Categories included:
+ * - .com variations (16 mappings): .cpm, .con, .ocm, .vom, etc.
+ * - .net variations (10 mappings): .ne, .nt, .bet, .met, etc.
+ * - .org variations (8 mappings): .ogr, .or, .og, .orh, etc.
+ * - .edu variations (5 mappings): .ed, .eud, .deu, etc.
+ * - .co.uk variations (9 mappings): .co,uk, .couk, .co.k, etc.
+ * - Generic TLD variations (4 mappings): .inf → .info, .bi → .biz
+ * - Mobile TLD variations (2 mappings): .mob → .mobi, .mobile → .mobi
+ */
 export const DEFAULT_FIX_TLDS: Record<string, string> = {
   // Common .com typos
   '.cpm': '.com',
@@ -161,6 +209,30 @@ export const DEFAULT_FIX_TLDS: Record<string, string> = {
   '.mobile': '.mobi',
 }
 
+/**
+ * Default email blocklist configuration to prevent invalid or unwanted email addresses.
+ *
+ * This configuration defines patterns for blocking certain types of email addresses,
+ * including test domains, temporary email services, and example domains that should
+ * not be used in production environments.
+ *
+ * @example
+ * ```typescript
+ * // These emails will be blocked:
+ * normaliseEmail('user@example.com')      // blocked by exact match
+ * normaliseEmail('user@test.mailinator.com') // blocked by wildcard pattern
+ * normaliseEmail('user@domain.test')      // blocked by TLD
+ * ```
+ *
+ * Blocking categories:
+ * - **Exact domains** (5 entries): Specific domains like example.com, test.com
+ * - **Suffix patterns** (2 entries): Domains ending with .example, .test
+ * - **Wildcard patterns** (3 entries): Pattern matching for temporary email services
+ * - **Blocked TLDs** (4 entries): Top-level domains like .test, .invalid, .example
+ *
+ * The configuration also supports an allowlist that can override blocked domains
+ * for specific exceptions when needed.
+ */
 export const DEFAULT_BLOCKLIST: EmailBlockConfig = {
   block: {
     exact: [
