@@ -1,0 +1,79 @@
+{
+  "name": "@cartoonclouds/contact-normalisers",
+  "version": "0.1.0",
+  "description": "Email and phone normalization, validation helpers, Vue directives and composables with optional AI assistance.",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./utils/email/normaliseEmail": {
+      "types": "./dist/utils/email/normaliseEmail.d.ts",
+      "import": "./dist/utils/email/normaliseEmail.mjs",
+      "require": "./dist/utils/email/normaliseEmail.cjs"
+    },
+    "./utils/email/validateEmail": {
+      "types": "./dist/utils/email/validateEmail.d.ts",
+      "import": "./dist/utils/email/validateEmail.mjs",
+      "require": "./dist/utils/email/validateEmail.cjs"
+    },
+    "./utils/email/aiSuggestEmail": {
+      "types": "./dist/utils/email/aiSuggestEmail.d.ts",
+      "import": "./dist/utils/email/aiSuggestEmail.mjs",
+      "require": "./dist/utils/email/aiSuggestEmail.cjs"
+    },
+    "./composables/useEmail": {
+      "types": "./dist/composables/useEmail.d.ts",
+      "import": "./dist/composables/useEmail.mjs",
+      "require": "./dist/composables/useEmail.cjs"
+    },
+    "./directives/email": {
+      "types": "./dist/directives/email.d.ts",
+      "import": "./dist/directives/email.mjs",
+      "require": "./dist/directives/email.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --dts --format cjs,esm --clean",
+    "dev": "tsup src/index.ts --watch --dts --format cjs,esm",
+    "test": "vitest run",
+    "lint": "eslint .",
+    "docs": "typedoc"
+  },
+  "peerDependencies": {
+    "vue": "3.5.22"
+  },
+  "dependencies": {
+    "@xenova/transformers": "2.17.2"
+  },
+  "devDependencies": {
+    "tsup": "8.5.0",
+    "typescript": "5.9.3",
+    "vitest": "4.0.3",
+    "typedoc": "0.28.14",
+    "typedoc-plugin-markdown": "4.9.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cartoonclouds/cartoonclouds"
+  },
+  "keywords": [
+    "email",
+    "normalization",
+    "validation",
+    "vue",
+    "directive",
+    "composable",
+    "e164"
+  ]
+}

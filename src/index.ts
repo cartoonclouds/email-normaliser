@@ -1,0 +1,6 @@
+export * from './utils/email/constants'
+export * from './utils/email/normaliseEmail'
+export * from './utils/email/validateEmail'
+export * from './utils/email/aiSuggestEmail'
+export * from './composables/useEmail'
+export { default as EmailDirective } from './directives/email'
