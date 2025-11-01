@@ -6,14 +6,17 @@ A comprehensive email normalization and validation library with Vue 3 directives
 ## Features
 
 ✨ **Email Normalization**: Automatic fixing of common typos, formatting issues, and obfuscation  
-🔍 **Smart Validation**: Multi-layered validation with customizable blocklists  
+🔍 **Smart Validation**: Multi-layered validation with fully customizable options  
+🌍 **Internationalization**: ASCII-only mode with automatic transliteration (ü→u, ñ→n, etc.)  
+⚙️ **Configurable Everything**: Custom blocklists, domain corrections, TLD corrections  
 🤖 **AI Domain Suggestions**: Machine learning-powered typo correction for email domains  
 ⚡ **Vue 3 Integration**: Ready-to-use composables and directives  
 🌳 **Tree Shakeable**: Import only what you need  
 📱 **TypeScript Support**: Full type safety with comprehensive JSDoc documentation  
-🎯 **67+ Domain Corrections**: Built-in fixes for common email provider typos  
-🌐 **51+ TLD Corrections**: Smart handling of TLD misspellings  
+🎯 **67+ Domain Corrections**: Built-in fixes for common email provider typos (extensible)  
+🌐 **51+ TLD Corrections**: Smart handling of TLD misspellings (extensible)  
 📚 **Comprehensive Documentation**: Detailed JSDoc for all types, functions, and constants  
+🧪 **181 Tests**: Thoroughly tested with comprehensive test suite including edge cases  
 
 ## Installation
 
@@ -29,9 +32,33 @@ npm install @cartoonclouds/contact-normalisers
 import { normaliseEmail } from '@cartoonclouds/contact-normalisers'
 
 const result = normaliseEmail('user@gamil.com') // Fixes gamil.com → gmail.com
-console.log(result.email) // 'user@gmail.com'
-console.log(result.valid) // true
-console.log(result.changes) // ['Corrected common domain or TLD typos.']
+console.log(result.email)                       // 'user@gmail.com'
+console.log(result.valid)                       // true
+console.log(result.changes)                     // ['Corrected common domain or TLD typos.']
+```
+
+### Advanced Configuration
+
+```typescript
+import { normaliseEmail, validateEmail } from '@cartoonclouds/contact-normalisers'
+
+// Custom normalization options
+const result = normaliseEmail('üser@typo.co', {
+  asciiOnly: true,                        // Convert non-ASCII characters to ASCII
+  fixDomains: { 'typo.co': 'gmail.com' }, // Custom domain corrections (adds to DEFAULT_FIX_DOMAINS)
+  fixTlds: { '.co': '.com' },             // Custom TLD corrections (add to DEFAULT_FIX_TLDS)
+  blocklist: {                            // Custom blocklist (replaces default DEFAULT_BLOCKLIST)
+    block: { exact: ['spam.com'] }
+  }
+})
+
+// Custom validation options
+const validation = validateEmail('user@example.com', {
+  asciiOnly: true,             // Allow international characters (default)
+  fixDomains: { 'mytypo.com': 'correct.com' },
+  fixTlds: { '.test': '.com' },
+  blocklist: { block: { exact: ['blocked.com'] } }
+})
 ```
 
 ### Vue 3 Composable
@@ -40,15 +67,38 @@ console.log(result.changes) // ['Corrected common domain or TLD typos.']
 <script setup>
 import { useEmail } from '@cartoonclouds/contact-normalisers'
 
+// Basic usage
 const { value, email, valid, changes, apply } = useEmail('', {
   autoFormat: true
+})
+
+// Advanced usage with custom options
+const { value: intlValue, email: intlEmail, valid: intlValid, apply: intlApply } = useEmail('', {
+  autoFormat: true,
+  normalizationOptions: {
+    asciiOnly: true,                    // Convert international characters
+    fixDomains: { 'mytypo.com': 'correct.com' },
+    blocklist: {
+      block: { exact: ['blocked.com'] }
+    }
+  }
 })
 </script>
 
 <template>
-  <input v-model="value" placeholder="Enter email" />
-  <p v-if="!valid">{{ changes.join(', ') }}</p>
-  <button @click="apply">Fix Email</button>
+  <!-- Basic email input -->
+  <div>
+    <input v-model="value" placeholder="Enter email" />
+    <p v-if="!valid">{{ changes.join(', ') }}</p>
+    <button @click="apply">Fix Email</button>
+  </div>
+
+  <!-- International email with ASCII conversion -->
+  <div>
+    <input v-model="intlValue" placeholder="Enter international email" />
+    <button @click="intlApply">Convert to ASCII & Fix</button>
+    <p>Result: {{ intlEmail }}</p>
+  </div>
 </template>
 ```
 
@@ -159,11 +209,21 @@ const result = normaliseEmail('User@GMAIL.CO', {
 - **TLD Typos**: 51+ TLD fixes (.con → .com, .co,uk → .co.uk, etc.)
 - **Case Normalization**: Lowercases domains while preserving local parts
 
-#### `validateEmail(email)`
+#### `validateEmail(email, options?)`
 
-Validate an email address and return detailed validation results.
+Validate an email address with customizable options and return detailed validation results.
 
 ```typescript
+/**
+ * Configuration options for email validation
+ */
+type EmailValidationOptions = {
+  blocklist?: EmailBlockConfig           // Custom blocklist (replaces default)
+  fixDomains?: Record<string, string>    // Custom domain corrections (merges with default)
+  fixTlds?: Record<string, string>       // Custom TLD corrections (merges with default)  
+  asciiOnly?: boolean                    // ASCII-only validation (default: true)
+}
+
 /**
  * Array of validation results from all validation checks performed on an email address.
  * If the email is valid, contains a single ValidationResult with isValid: true.
@@ -178,6 +238,7 @@ type ValidationResults = Array<{
   validationMessage: string
 }>
 
+// Basic validation
 const results = validateEmail('user@invalid-domain.test')
 // Example result:
 // [{
@@ -185,14 +246,29 @@ const results = validateEmail('user@invalid-domain.test')
 //   validationCode: 'BLOCKLISTED', 
 //   validationMessage: 'Email domain is blocklisted.'
 // }]
+
+// Advanced validation with custom options
+const customResults = validateEmail('üser@typo.co', {
+  asciiOnly: true,                           // Reject non-ASCII characters
+  fixDomains: { 'typo.co': 'example.com' },  // Custom domain corrections
+  fixTlds: { '.co': '.com' },                // Custom TLD corrections
+  blocklist: {                               // Custom blocklist
+    block: { exact: ['spam.com'] }
+  }
+})
+// Returns: [
+//   { validationCode: 'INVALID_DOMAIN', ... },
+//   { validationCode: 'NON_ASCII_CHARACTERS', ... }
+// ]
 ```
 
 **Validation Checks:**
 - Empty/whitespace validation
 - Format validation (RFC-compliant regex)
-- Domain typo detection
-- TLD typo detection  
-- Blocklist checking (exact, suffix, wildcard, TLD patterns)
+- Domain typo detection (customizable)
+- TLD typo detection (customizable)
+- Blocklist checking (exact, suffix, wildcard, TLD patterns - customizable)
+- ASCII-only character validation (optional)
 
 #### `aiSuggestEmailDomain(domain, options?)`
 
@@ -602,32 +678,56 @@ import { DEFAULT_BLOCKLIST } from '@cartoonclouds/contact-normalisers'
 
 ### Custom Configuration
 
+Both `normaliseEmail` and `validateEmail` functions support comprehensive configuration options:
+
 ```typescript
-const result = normaliseEmail('user@custom-typo.co', {
-  // Extend built-in domain corrections
+import { normaliseEmail, validateEmail, DEFAULT_FIX_DOMAINS, DEFAULT_FIX_TLDS } from '@cartoonclouds/contact-normalisers'
+
+const options = {
+  // ASCII-only mode: convert/reject non-ASCII characters
+  asciiOnly: true,
+  
+  // Extend built-in domain corrections (merges with defaults)
   fixDomains: {
     ...DEFAULT_FIX_DOMAINS,
     'mycorp.typo': 'mycorp.com'
   },
   
-  // Extend built-in TLD corrections
+  // Extend built-in TLD corrections (merges with defaults)
   fixTlds: {
     ...DEFAULT_FIX_TLDS,
     '.internal': '.com'
   },
   
-  // Custom blocklist
+  // Custom blocklist (completely replaces default)
   blocklist: {
     block: {
       exact: ['competitor.com'],
-      wildcard: ['*.temp.*', '*.disposable.*']
+      wildcard: ['*.temp.*', '*.disposable.*'],
+      tlds: ['.test', '.invalid'],
+      suffix: ['.tempmail']
     },
     allow: {
       exact: ['important-temp-domain.com'] // Override blocks
     }
   }
-})
+}
+
+// Apply to normalization
+const normalized = normaliseEmail('Üser@mycorp.typo', options)
+// Result: { email: 'User@mycorp.com', changeCodes: ['converted_to_ascii', 'fixed_domain_and_tld_typos'], ... }
+
+// Apply to validation  
+const validation = validateEmail('Üser@mycorp.typo', options)
+// Result: [{ validationCode: 'NON_ASCII_CHARACTERS', ... }, { validationCode: 'INVALID_DOMAIN', ... }]
 ```
+
+#### Configuration Options Details
+
+- **`asciiOnly`**: When `true`, normalizeEmail converts non-ASCII to ASCII, validateEmail rejects non-ASCII
+- **`fixDomains`**: Merges with built-in domain corrections (67+ defaults)
+- **`fixTlds`**: Merges with built-in TLD corrections (51+ defaults)  
+- **`blocklist`**: Completely replaces default blocklist when provided
 
 ### Error Handling
 
@@ -740,22 +840,7 @@ const { email, apply } = useEmail(value)
 
 ## Development
 
-```bash
-# Install dependencies
-npm install
-
-# Run tests
-npm test
-
-# Build package
-npm run build
-
-# Generate documentation
-npm run docs
-
-# Type check
-npm run type-check
-```
+For detailed development information, local setup instructions, testing guidelines, and contribution workflow, see [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ## License
 
@@ -766,5 +851,13 @@ MIT
 Contributions are welcome! Please read our contributing guidelines and submit pull requests for any improvements.
 
 ---
+
+## Recent Updates
+
+**Latest Version** adds comprehensive configuration options:
+- 🌍 **ASCII-only mode** with automatic transliteration  
+- ⚙️ **Custom validation options** for domains, TLDs, and blocklists
+- 🔄 **Full backward compatibility** - existing code unchanged
+- 🧪 **181 comprehensive tests** covering all functionality
 
 **Note**: The AI-powered domain suggestions require downloading transformer models (~23MB) on first use. This happens automatically in the browser or Node.js environment.

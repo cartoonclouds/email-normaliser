@@ -3,6 +3,7 @@ import {
   DEFAULT_FIX_DOMAINS,
   DEFAULT_FIX_TLDS,
 } from './constants'
+import { blocklisted, looksLikeEmail } from './validateEmail'
 
 // --- types and constants ------------------------------------------
 
@@ -67,6 +68,8 @@ export const EmailChangeCodes = Object.freeze({
   STRIPPED_DISPLAY_NAME_AND_COMMENTS: 'stripped_display_name_and_comments',
   /** Cleaned up spacing, punctuation, and formatting issues */
   TIDIED_PUNCTUATION_AND_SPACING: 'tidied_punctuation_and_spacing',
+  /** Converted non-ASCII characters to ASCII equivalents or removed them */
+  CONVERTED_TO_ASCII: 'converted_to_ascii',
 } as const)
 
 /**
@@ -146,7 +149,8 @@ export type EmailBlockConfig = {
  *   fixTlds: { '.typo': '.com' },
  *   blocklist: {
  *     block: { exact: ['unwanted.domain'] }
- *   }
+ *   },
+ *   asciiOnly: true
  * }
  * ```
  */
@@ -169,6 +173,16 @@ export type EmailNormOptions = {
    * @default DEFAULT_FIX_TLDS
    */
   fixTlds?: Record<string, string>
+  /**
+   * Whether to allow only ASCII characters in email addresses.
+   *
+   * When `true` (default), non-ASCII characters will be considered invalid and
+   * the normalization process will attempt to remove or transliterate them.
+   * When `false`, international characters are allowed.
+   *
+   * @default true
+   */
+  asciiOnly?: boolean
 }
 
 /**
@@ -204,6 +218,97 @@ function toAsciiLike(s: string): EmailFixResult {
   return {
     out,
     changed: out !== s,
+  }
+}
+
+/**
+ * Remove or transliterate non-ASCII characters from email string.
+ *
+ * This function attempts basic transliteration for common international
+ * characters and removes characters that can't be converted to ASCII.
+ *
+ * @param {string} s
+ * @returns {EmailFixResult}
+ */
+function toAsciiOnly(s: string): EmailFixResult {
+  const original = s
+  let out = s
+
+  // Basic transliteration map for common international characters
+  const transliterationMap: Record<string, string> = {
+    // Latin characters with diacritics
+    à: 'a',
+    á: 'a',
+    â: 'a',
+    ã: 'a',
+    ä: 'a',
+    å: 'a',
+    æ: 'ae',
+    ç: 'c',
+    è: 'e',
+    é: 'e',
+    ê: 'e',
+    ë: 'e',
+    ì: 'i',
+    í: 'i',
+    î: 'i',
+    ï: 'i',
+    ñ: 'n',
+    ò: 'o',
+    ó: 'o',
+    ô: 'o',
+    õ: 'o',
+    ö: 'o',
+    ø: 'o',
+    ù: 'u',
+    ú: 'u',
+    û: 'u',
+    ü: 'u',
+    ý: 'y',
+    ÿ: 'y',
+    ß: 'ss',
+    // Uppercase versions
+    À: 'A',
+    Á: 'A',
+    Â: 'A',
+    Ã: 'A',
+    Ä: 'A',
+    Å: 'A',
+    Æ: 'AE',
+    Ç: 'C',
+    È: 'E',
+    É: 'E',
+    Ê: 'E',
+    Ë: 'E',
+    Ì: 'I',
+    Í: 'I',
+    Î: 'I',
+    Ï: 'I',
+    Ñ: 'N',
+    Ò: 'O',
+    Ó: 'O',
+    Ô: 'O',
+    Õ: 'O',
+    Ö: 'O',
+    Ø: 'O',
+    Ù: 'U',
+    Ú: 'U',
+    Û: 'U',
+    Ü: 'U',
+    Ý: 'Y',
+  }
+
+  // Apply transliteration
+  for (const [nonAscii, ascii] of Object.entries(transliterationMap)) {
+    out = out.replace(new RegExp(nonAscii, 'g'), ascii)
+  }
+
+  // Remove any remaining non-ASCII characters (printable ASCII range)
+  out = out.replace(/[^ -~]/g, '')
+
+  return {
+    out,
+    changed: out !== original,
   }
 }
 
@@ -360,106 +465,6 @@ function applyMaps(
 }
 
 /**
- * Check if email domain is blocklisted.
- *
- * @see DEFAULT_BLOCKLIST
- * @param {string} email - The full email address
- * @param {EmailBlockConfig} cfg
- * @returns {boolean}
- */
-function blocklisted(email: string, cfg: EmailBlockConfig): boolean {
-  // Extract domain from email
-  const atIndex = email.lastIndexOf('@')
-  if (atIndex === -1) {
-    return false // No @ symbol, not a valid email format
-  }
-
-  const domain = email.slice(atIndex + 1)
-  const d = domain.toLowerCase()
-
-  // allowlist overrides
-  const allowExact = (cfg.allow?.exact ?? []).map((s) => s.toLowerCase())
-  if (allowExact.includes(d)) {
-    return false
-  }
-
-  // exact
-  const exact = (cfg.block?.exact ?? []).map((s) => s.toLowerCase())
-  if (exact.includes(d)) {
-    return true
-  }
-
-  // tlds
-  for (const t of cfg.block?.tlds ?? []) {
-    const tt = t.toLowerCase()
-    if (tt && d.endsWith(tt)) {
-      return true
-    }
-  }
-
-  // suffix
-  for (const s of cfg.block?.suffix ?? []) {
-    const ss = s.toLowerCase()
-    if (ss && d.endsWith(ss)) {
-      return true
-    }
-  }
-
-  // wildcard
-  for (const w of cfg.block?.wildcard ?? []) {
-    const pat = String(w).toLowerCase()
-
-    if (!pat) {
-      continue
-    }
-
-    // fnmatch-like simple convert
-    // * -> .*
-    // ? -> .
-    // escape other regex chars
-    const re = new RegExp(
-      '^' +
-        pat
-          .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-          .replace(/\*/g, '.*')
-          .replace(/\?/g, '.') +
-        '$',
-      'i'
-    )
-
-    if (re.test(d)) {
-      return true
-    }
-  }
-
-  // explicit example/test base domains
-  if (/@(example|test)\./i.test(`@${d}`)) {
-    return true
-  }
-
-  return false
-}
-
-/**
- * Quick check if string looks like an email shape.
- *
- * @param {string} s
- * @returns {boolean}
- */
-function looksLikeEmail(s: string): boolean {
-  // Explain regex:
-  // ^                 : start of string
-  // [^@\s"<>]+        : one or more characters that are not @, whitespace, " or <
-  // @                 : literal @ symbol
-  // [A-Za-z0-9.-]+    : one or more alphanumeric characters, dots or hyphens
-  // \.                : literal dot
-  // [A-Za-z]{2,}      : two or more alphabetic characters
-  const m = s.match(/^[^@\s"<>;,)(]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)
-
-  return !!m
-}
-
-/**
  * Convert email change code to human-readable reason.
  *
  * @param {EmailChangeCode} code
@@ -490,6 +495,9 @@ export function changeCodeToReason(code: EmailChangeCode): string | null {
 
     case EmailChangeCodes.BLOCKED_BY_LIST:
       return 'Email is blocked.'
+
+    case EmailChangeCodes.CONVERTED_TO_ASCII:
+      return 'Converted non-ASCII characters to ASCII.'
 
     default:
       globalThis.console.warn(`Unknown email change code: ${code as string}`)
@@ -523,6 +531,8 @@ export function normaliseEmail(
 ): EmailNormResult {
   const changes: EmailChangeCode[] = []
   let s = String(raw || '').trim()
+
+  const asciiOnly = opts.asciiOnly ?? true
 
   if (s === '') {
     return {
@@ -576,6 +586,15 @@ export function normaliseEmail(
     }
   }
 
+  // Convert to ASCII only if requested
+  if (asciiOnly) {
+    const r = toAsciiOnly(s)
+    if (r.changed) {
+      s = r.out
+      changes.push(EmailChangeCodes.CONVERTED_TO_ASCII)
+    }
+  }
+
   // lowercase domain
   const at = s.indexOf('@')
   if (at > -1) {
@@ -585,6 +604,20 @@ export function normaliseEmail(
     if (next !== s) {
       s = next
       changes.push(EmailChangeCodes.LOWERCASED_DOMAIN)
+    }
+  }
+
+  // blocklist check (before shape validation to ensure blocklist takes priority)
+  const cfg = opts.blocklist || DEFAULT_BLOCKLIST
+  if (blocklisted(s, cfg)) {
+    return {
+      email: s,
+      valid: false,
+      changeCodes: [...changes, EmailChangeCodes.BLOCKED_BY_LIST],
+      changes: mapChangeCodesToReason([
+        ...changes,
+        EmailChangeCodes.BLOCKED_BY_LIST,
+      ]),
     }
   }
 
@@ -599,20 +632,6 @@ export function normaliseEmail(
       changes: mapChangeCodesToReason([
         ...changes,
         EmailChangeCodes.INVALID_EMAIL_SHAPE,
-      ]),
-    }
-  }
-
-  // blocklist check
-  const cfg = opts.blocklist || DEFAULT_BLOCKLIST
-  if (blocklisted(s, cfg)) {
-    return {
-      email: s,
-      valid: false,
-      changeCodes: [...changes, EmailChangeCodes.BLOCKED_BY_LIST],
-      changes: mapChangeCodesToReason([
-        ...changes,
-        EmailChangeCodes.BLOCKED_BY_LIST,
       ]),
     }
   }

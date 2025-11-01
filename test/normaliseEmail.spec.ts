@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   EmailChangeCodes,
@@ -1092,7 +1092,7 @@ describe('normaliseEmail', () => {
     })
 
     it('handles international characters in local part', () => {
-      const result = normaliseEmail('用户@domain.org')
+      const result = normaliseEmail('用户@domain.org', { asciiOnly: false })
       expect(result.valid).toBe(true)
       expect(result.email).toBe('用户@domain.org')
     })
@@ -1190,6 +1190,84 @@ describe('normaliseEmail', () => {
         changeCodes: [EmailChangeCodes.BLOCKED_BY_LIST],
         changes: [changeCodeToReason(EmailChangeCodes.BLOCKED_BY_LIST)],
       })
+    })
+
+    it('should handle empty/falsy wildcard patterns', () => {
+      // Test with mixed empty and valid patterns to ensure empty ones are skipped
+      const result = normaliseEmail('test@domain.com', {
+        blocklist: {
+          block: {
+            wildcard: ['', 'valid.pattern', '', '*.blocked.com'],
+          },
+        },
+      })
+
+      // Should not be blocked since empty patterns are skipped
+      expect(result.valid).toBe(true)
+      expect(result.changeCodes).not.toContain(EmailChangeCodes.BLOCKED_BY_LIST)
+    })
+
+    it('should handle wildcard patterns with only empty values', () => {
+      // This specifically tests the `if (!pat) continue` path
+      const result = normaliseEmail('test@should-not-be-blocked.com', {
+        blocklist: {
+          block: {
+            wildcard: ['', '   ', '\t', '\n'],
+          },
+        },
+      })
+
+      // Should not be blocked since all patterns are empty after trim/processing
+      expect(result.valid).toBe(true)
+      expect(result.changeCodes).not.toContain(EmailChangeCodes.BLOCKED_BY_LIST)
+    })
+
+    it('should handle email without @ symbol in blocklist check', () => {
+      // This tests the specific line 374-375 where atIndex === -1 returns false
+      const result = normaliseEmail('invalid-email-no-at-symbol', {
+        blocklist: {
+          block: {
+            exact: ['invalid-email-no-at-symbol'],
+          },
+        },
+      })
+
+      // Should not be blocked since it's not a valid email format (no @ symbol)
+      // The blocklisted function should return false for emails without @
+      expect(result.valid).toBe(false) // Invalid due to shape, not due to blocklist
+      expect(result.changeCodes).not.toContain(EmailChangeCodes.BLOCKED_BY_LIST)
+    })
+  })
+
+  describe('changeCodeToReason edge cases', () => {
+    it('should handle unknown change codes', () => {
+      const consoleSpy = vi
+        .spyOn(globalThis.console, 'warn')
+        .mockImplementation(() => {})
+
+      expect(changeCodeToReason('UNKNOWN_CODE' as any)).toBe(null)
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Unknown email change code: UNKNOWN_CODE'
+      )
+
+      consoleSpy.mockRestore()
+    })
+
+    it('should handle null and undefined change codes', () => {
+      const consoleSpy = vi
+        .spyOn(globalThis.console, 'warn')
+        .mockImplementation(() => {})
+
+      expect(changeCodeToReason(null as any)).toBe(null)
+      expect(changeCodeToReason(undefined as any)).toBe(null)
+
+      expect(consoleSpy).toHaveBeenCalledWith('Unknown email change code: null')
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Unknown email change code: undefined'
+      )
+
+      consoleSpy.mockRestore()
     })
   })
 })

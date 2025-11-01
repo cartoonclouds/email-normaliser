@@ -33,6 +33,8 @@ export const EmailValidationCodes = Object.freeze({
   INVALID_DOMAIN: 'INVALID_DOMAIN',
   /** Email TLD matches a known typo in the corrections list */
   INVALID_TLD: 'INVALID_TLD',
+  /** Email contains non-ASCII characters when ASCII-only mode is enabled */
+  NON_ASCII_CHARACTERS: 'NON_ASCII_CHARACTERS',
 } as const)
 
 /**
@@ -59,7 +61,7 @@ export type EmailValidationCode =
  * }
  * ```
  */
-type ValidationResult = {
+export type ValidationResult = {
   /** Whether this specific validation check passed */
   isValid: boolean
   /** The specific validation code that was triggered */
@@ -85,9 +87,58 @@ type ValidationResult = {
  * // }]
  * ```
  */
-type ValidationResults = ValidationResult[]
+export type ValidationResults = ValidationResult[]
+
+/**
+ * Configuration options for email validation.
+ *
+ * Allows customization of the validation process by providing custom
+ * domain corrections, TLD corrections, blocklist rules, and ASCII-only validation.
+ *
+ * @example
+ * ```typescript
+ * const options: EmailValidationOptions = {
+ *   fixDomains: { 'mytypo.com': 'correct.com' },
+ *   fixTlds: { '.typo': '.com' },
+ *   blocklist: {
+ *     block: { exact: ['unwanted.domain'] }
+ *   },
+ *   asciiOnly: true
+ * }
+ * ```
+ */
+export type EmailValidationOptions = {
+  /**
+   * Blocklist configuration for email validation.
+   *
+   * @default DEFAULT_BLOCKLIST
+   */
+  blocklist?: EmailBlockConfig
+  /**
+   * Fix common domain typos configuration.
+   *
+   * @default DEFAULT_FIX_DOMAINS
+   */
+  fixDomains?: Record<string, string>
+  /**
+   * Fix common TLD typos configuration.
+   *
+   * @default DEFAULT_FIX_TLDS
+   */
+  fixTlds?: Record<string, string>
+  /**
+   * Whether to allow only ASCII characters in email addresses.
+   *
+   * When `true` (default), non-ASCII characters will be considered invalid.
+   * When `false`, international characters are allowed.
+   *
+   * @default true
+   */
+  asciiOnly?: boolean
+}
 
 // --- helpers -------------------------------------------------------
+
 /**
  * Convert a validation code to a human-readable reason.
  *
@@ -113,6 +164,9 @@ export function validationCodeToReason(
     case EmailValidationCodes.INVALID_TLD:
       return 'Email top-level domain (TLD) is invalid.'
 
+    case EmailValidationCodes.NON_ASCII_CHARACTERS:
+      return 'Email contains non-ASCII characters.'
+
     case EmailValidationCodes.VALID:
       return 'Email is valid.'
 
@@ -129,7 +183,7 @@ export function validationCodeToReason(
  * @param {string} raw
  * @returns {boolean}
  */
-function isEmpty(raw: string): boolean {
+export function isEmpty(raw: string): boolean {
   const s = String(raw || '').trim()
 
   return s.length === 0
@@ -143,7 +197,7 @@ function isEmpty(raw: string): boolean {
  * @param {EmailBlockConfig} cfg
  * @returns {boolean}
  */
-function blocklisted(email: string, cfg: EmailBlockConfig): boolean {
+export function blocklisted(email: string, cfg: EmailBlockConfig): boolean {
   // Extract domain from email
   const atIndex = email.lastIndexOf('@')
   if (atIndex === -1) {
@@ -222,29 +276,60 @@ function blocklisted(email: string, cfg: EmailBlockConfig): boolean {
  * @param {string} s
  * @returns {boolean}
  */
-function looksLikeEmail(s: string): boolean {
-  // Explain regex:
-  // ^                                    : start of string
-  // [a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]       : first character cannot be a dot
-  // [a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]*     : followed by zero or more valid characters (including dots)
-  // @                                    : literal @ symbol
-  // [a-zA-Z0-9]                          : domain must start with alphanumeric
-  // ([a-zA-Z0-9-]*[a-zA-Z0-9])?         : optional middle part (alphanumeric + hyphens, ending with alphanumeric)
-  // (\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)* : zero or more dot-separated parts
-  // \.                                   : literal dot before TLD
-  // [a-zA-Z]{2,3}                        : two or three alphabetic characters (strict TLD check)
-  // $                                    : end of string
+export function looksLikeEmail(s: string): boolean {
+  // More permissive email validation that allows:
+  // - International characters in local part
+  // - TLDs of 2+ characters (including newer TLDs like .evil, .tech, etc.)
+  // - Basic structure validation: local@domain.tld
 
   // Check for consecutive dots first
   if (s.includes('..')) {
     return false
   }
 
-  const m = s.match(
-    /^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-][a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]*@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)*\.[a-zA-Z]{2,3}$/
-  )
+  // Basic structure check: must have exactly one @ and at least one dot after @
+  const atIndex = s.indexOf('@')
+  if (atIndex === -1 || s.indexOf('@', atIndex + 1) !== -1) {
+    return false // No @ or multiple @
+  }
 
-  return !!m
+  const local = s.slice(0, atIndex)
+  const domain = s.slice(atIndex + 1)
+
+  // Local part must not be empty and not start/end with dot
+  if (!local || local.startsWith('.') || local.endsWith('.')) {
+    return false
+  }
+
+  // Check for invalid characters in local part using regex
+  // Matches: space, quote, angle brackets, semicolon, comma, parentheses, square brackets, curly brackets
+  if (/[ "<>;,()[\]{}]/.test(local)) {
+    return false
+  }
+
+  // Domain must not be empty
+  if (!domain) {
+    return false
+  }
+
+  // Check for invalid characters in domain using regex
+  // Matches: space, semicolon, comma, parentheses, plus, square brackets, curly brackets, angle brackets, underscore
+  if (/[ ;,(){}<>_+[\]]/.test(domain)) {
+    return false
+  }
+
+  // Domain must have at least one dot and not start/end with dot or hyphen
+  if (!/\./.test(domain) || /^[.-]|[.-]$/.test(domain)) {
+    return false
+  }
+
+  // TLD must be at least 2 characters and contain only letters
+  const tldMatch = domain.match(/\.([a-zA-Z]{2,})$/)
+  if (!tldMatch) {
+    return false
+  }
+
+  return true
 }
 
 /**
@@ -254,7 +339,10 @@ function looksLikeEmail(s: string): boolean {
  * @param {Record<string, string>} domains
  * @returns {boolean}
  */
-function checkDomain(email: string, domains: Record<string, string>): boolean {
+export function checkDomain(
+  email: string,
+  domains: Record<string, string>
+): boolean {
   const idx = email.lastIndexOf('@')
 
   if (idx < 0) {
@@ -277,7 +365,7 @@ function checkDomain(email: string, domains: Record<string, string>): boolean {
  * @param {string[]} tlds
  * @returns {boolean}
  */
-function checkTld(email: string, tlds: string[]): boolean {
+export function checkTld(email: string, tlds: string[]): boolean {
   const idx = email.lastIndexOf('@')
 
   if (idx < 0) {
@@ -301,13 +389,52 @@ function checkTld(email: string, tlds: string[]): boolean {
 }
 
 /**
+ * Check if a string contains non-ASCII characters.
+ *
+ * @param {string} text - The text to check
+ * @returns True if the text contains non-ASCII characters
+ */
+function hasNonAsciiCharacters(text: string): boolean {
+  return /[^\x20-\x7E]/.test(text)
+}
+
+/**
  * Validate an email address and return validation results.
  *
- * @param {string} email
+ * Performs comprehensive validation including:
+ * - Format validation (basic email structure)
+ * - Domain validation (common typos and corrections)
+ * - TLD validation (top-level domain corrections)
+ * - Blocklist checking (known bad domains)
+ * - ASCII-only validation (when enabled)
+ *
+ * @param {string} email - The email address to validate
+ * @param {EmailValidationOptions} options - Optional validation configuration
  * @returns {ValidationResults}
+ *
+ * @example
+ * ```typescript
+ * const results = validateEmail('user@example.com')
+ * // Basic validation with defaults
+ *
+ * const customResults = validateEmail('user@typo.co', {
+ *   fixTlds: { '.co': '.com' },
+ *   asciiOnly: true
+ * })
+ * // Custom validation with TLD correction and ASCII-only
+ * ```
  */
-export function validateEmail(email: string): ValidationResults {
+export function validateEmail(
+  email: string,
+  options: EmailValidationOptions = {}
+): ValidationResults {
   const validationResults: ValidationResults = []
+
+  // Merge provided options with defaults (except blocklist which completely replaces)
+  const fixDomains = { ...DEFAULT_FIX_DOMAINS, ...(options.fixDomains || {}) }
+  const fixTlds = { ...DEFAULT_FIX_TLDS, ...(options.fixTlds || {}) }
+  const blocklist = options.blocklist || DEFAULT_BLOCKLIST
+  const asciiOnly = options.asciiOnly ?? true
 
   if (isEmpty(email)) {
     validationResults.push({
@@ -329,7 +456,7 @@ export function validateEmail(email: string): ValidationResults {
     })
   }
 
-  if (checkDomain(email, DEFAULT_FIX_DOMAINS)) {
+  if (checkDomain(email, fixDomains)) {
     validationResults.push({
       isValid: false,
       validationCode: EmailValidationCodes.INVALID_DOMAIN,
@@ -339,7 +466,7 @@ export function validateEmail(email: string): ValidationResults {
     })
   }
 
-  if (checkTld(email, Object.keys(DEFAULT_FIX_TLDS))) {
+  if (checkTld(email, Object.keys(fixTlds))) {
     validationResults.push({
       isValid: false,
       validationCode: EmailValidationCodes.INVALID_TLD,
@@ -350,12 +477,23 @@ export function validateEmail(email: string): ValidationResults {
   }
 
   // Check if email domain is blocklisted
-  if (blocklisted(email, DEFAULT_BLOCKLIST)) {
+  if (blocklisted(email, blocklist)) {
     validationResults.push({
       isValid: false,
       validationCode: EmailValidationCodes.BLOCKLISTED,
       validationMessage: validationCodeToReason(
         EmailValidationCodes.BLOCKLISTED
+      ) as string,
+    })
+  }
+
+  // Check for non-ASCII characters if asciiOnly option is enabled
+  if (asciiOnly && hasNonAsciiCharacters(email)) {
+    validationResults.push({
+      isValid: false,
+      validationCode: EmailValidationCodes.NON_ASCII_CHARACTERS,
+      validationMessage: validationCodeToReason(
+        EmailValidationCodes.NON_ASCII_CHARACTERS
       ) as string,
     })
   }
