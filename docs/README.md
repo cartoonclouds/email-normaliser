@@ -15,6 +15,7 @@
 - [EmailFixResult](type-aliases/EmailFixResult.md)
 - [EmailNormOptions](type-aliases/EmailNormOptions.md)
 - [EmailNormResult](type-aliases/EmailNormResult.md)
+- [EmailOpts](type-aliases/EmailOpts.md)
 - [EmailValidationCode](type-aliases/EmailValidationCode.md)
 - [EmailValidationOptions](type-aliases/EmailValidationOptions.md)
 - [FindClosestOptions](type-aliases/FindClosestOptions.md)

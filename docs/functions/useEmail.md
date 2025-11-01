@@ -6,7 +6,7 @@
 
 > **useEmail**(`initial`, `opts`): `object`
 
-Defined in: [composables/useEmail.ts:28](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/composables/useEmail.ts#L28)
+Defined in: [composables/useEmail.ts:24](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/composables/useEmail.ts#L24)
 
 Vue composable for email normalization and validation.
 

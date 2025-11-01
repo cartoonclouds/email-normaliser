@@ -12,10 +12,6 @@ import type { EmailNormResult, UseEmailOptions } from '../utils/email/types'
  *
  * @param {string} initial - Initial email value (default: '')
  * @param {UseEmailOptions} opts - Configuration options
- * @param {boolean} opts.autoFormat - Automatically format email on value change (default: false)
- * @param {EmailBlockConfig} opts.blocklist - Custom email blocklist configuration
- * @param {Record<string, string>} opts.fixDomains - Custom domain typo corrections
- * @param {Record<string, string>} opts.fixTlds - Custom TLD typo corrections
  * @returns {object} Email composable interface
  * @returns {Ref<string>} returns.value - Reactive email input value
  * @returns {ComputedRef<string | null>} returns.email - Normalized email address

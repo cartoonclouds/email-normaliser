@@ -14,7 +14,7 @@ import type { EmailNormOptions } from '../utils/email/types'
  * <input v-email="{ autoFormat: true, previewSelector: '#emailPreview' }" />
  * <input v-email="{ onNormalized: (result) => console.log(result) }" />
  */
-type EmailOpts = EmailNormOptions & {
+export type EmailOpts = EmailNormOptions & {
   /**
    * Automatically format the email input value on input/blur events
    *
@@ -129,10 +129,11 @@ function setPreview(
  * <input v-email="{ autoFormat: true, previewSelector: '#emailPreview' }" />
  * <input v-email="{ onNormalized: (result) => console.log(result) }" />
  *
+ * The directive emits a 'directive:email:normalized' event when email normalization is complete.
+ *
  * @param {HTMLInputElement} el The element the directive is bound to
  * @param {DirectiveBinding<EmailOpts>} binding The directive binding
  * @returns {void}
- * @emits directive:email:normalized
  */
 export default {
   mounted(el: HTMLInputElement, binding: { value?: EmailOpts }) {

@@ -6,13 +6,15 @@
 
 > **EmailDirective**: `object`
 
-Defined in: [directives/email.ts:137](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/directives/email.ts#L137)
+Defined in: [directives/email.ts:138](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/directives/email.ts#L138)
 
 Vue directive for normalizing and validating email inputs.
 
 Usage:
 <input v-email="{ autoFormat: true, previewSelector: '#emailPreview' }" />
 <input v-email="{ onNormalized: (result) => console.log(result) }" />
+
+The directive emits a 'directive:email:normalized' event when email normalization is complete.
 
 ## Type Declaration
 
@@ -48,7 +50,7 @@ The element the directive is bound to
 
 ###### value?
 
-`EmailOpts`
+[`EmailOpts`](../type-aliases/EmailOpts.md)
 
 #### Returns
 
@@ -74,7 +76,7 @@ The directive binding
 
 ###### value?
 
-`EmailOpts`
+[`EmailOpts`](../type-aliases/EmailOpts.md)
 
 #### Returns
 
@@ -89,7 +91,3 @@ The element the directive is bound to
 The directive binding
 
 ## Returns
-
-## Emits
-
-directive:email:normalized
