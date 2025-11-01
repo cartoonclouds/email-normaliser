@@ -16,9 +16,10 @@ A comprehensive email normalization and validation library with Vue 3 directives
 🎯 **67+ Domain Corrections**: Built-in fixes for common email provider typos (extensible)  
 🌐 **51+ TLD Corrections**: Smart handling of TLD misspellings (extensible)  
 📚 **Comprehensive Documentation**: Detailed JSDoc for all types, functions, and constants  
-🧪 **340+ Tests**: Thoroughly tested with comprehensive test suite including edge cases  
+🧪 **382+ Tests**: Thoroughly tested with comprehensive test suite including edge cases  
 🔧 **Fuzzy Domain Matching**: Intelligent domain correction using Levenshtein distance algorithms  
 🏗️ **Centralized Types**: All TypeScript types consolidated in a single, maintainable location  
+🛠️ **Robust Testing**: Advanced mock strategies for complex third-party integrations  
 
 ## Installation
 
@@ -212,7 +213,7 @@ import { EmailDirective } from '@cartoonclouds/email-normaliser'
 
 #### `normaliseEmail(email, options?)`
 
-Normalize and validate an email address with comprehensive error checking.
+normalise and validate an email address with comprehensive error checking.
 
 ```typescript
 import type { EmailNormResult, EmailNormOptions } from '@cartoonclouds/email-normaliser'
@@ -330,7 +331,7 @@ console.log(levenshtein('verydifferent', 'gmail.com', 3)) // > 3 (stops early)
 Find the closest domain from a list of candidates using fuzzy matching.
 
 ```typescript
-import { findClosestDomain, DEFAULT_CANDIDATES } from '@cartoonclouds/email-normaliser/utils/email/fuzzyDomainMatching'
+import { findClosestDomain, DEFAULT_FUZZY_DOMAIN_CANDIDATES } from '@cartoonclouds/email-normaliser/utils/email/fuzzyDomainMatching'
 
 // Basic usage with built-in 28+ domain candidates
 const result = findClosestDomain('gmai.com')
@@ -339,7 +340,7 @@ console.log(result)
 //   input: 'gmai.com',
 //   candidate: 'gmail.com', 
 //   distance: 1,
-//   normalizedScore: 0.89,
+//   normalisedScore: 0.89,
 //   index: 0
 // }
 
@@ -347,7 +348,7 @@ console.log(result)
 const customResult = findClosestDomain('mytypo.co', {
   candidates: ['mysite.com', 'example.com'],
   maxDistance: 3,
-  normalize: true
+  normalise: true
 })
 
 // UK ISP domain correction
@@ -358,7 +359,7 @@ console.log(ukResult.candidate) // 'virginmedia.co.uk'
 **Configuration Options:**
 - **`candidates`**: Custom domain list (extends built-in 28+ domains)
 - **`maxDistance`**: Maximum edit distance threshold (returns null if exceeded)
-- **`normalize`**: Automatic case and whitespace normalization (default: true)
+- **`normalise`**: Automatic case and whitespace normalization (default: true)
 
 **Built-in Domain Candidates (28):**
 - **Major providers**: gmail.com, outlook.com, hotmail.com, yahoo.com, icloud.com
@@ -379,11 +380,11 @@ interface UseEmailOptions extends EmailNormOptions {
 
 const {
   value,      // Ref<string> - Raw input value
-  email,      // ComputedRef<string | null> - Normalized email
+  email,      // ComputedRef<string | null> - normalised email
   valid,      // ComputedRef<boolean> - Validation status
   changes,    // ComputedRef<string[]> - List of changes made
   result,     // ComputedRef<EmailNormResult> - Full normalization result
-  apply,      // () => void - Apply normalized email to input
+  apply,      // () => void - Apply normalised email to input
   validate    // () => boolean - Manually trigger validation
 } = useEmail('initial@email.com', { autoFormat: true })
 ```
@@ -404,7 +405,7 @@ Full-featured Vue directive for automatic email processing.
   <input v-email="{ 
     autoFormat: true,
     previewSelector: '#preview',
-    onNormalized: (result) => console.log(result)
+    onnormalised: (result) => console.log(result)
   }" />
   <div id="preview"></div>
   
@@ -794,7 +795,7 @@ const options = {
 }
 
 // Apply to normalization
-const normalized = normaliseEmail('Üser@mycorp.typo', options)
+const normalised = normaliseEmail('Üser@mycorp.typo', options)
 // Result: { email: 'User@mycorp.com', changeCodes: ['converted_to_ascii', 'fixed_domain_and_tld_typos'], ... }
 
 // Apply to validation  
@@ -804,7 +805,7 @@ const validation = validateEmail('Üser@mycorp.typo', options)
 
 #### Configuration Options Details
 
-- **`asciiOnly`**: When `true`, normalizeEmail converts non-ASCII to ASCII, validateEmail rejects non-ASCII
+- **`asciiOnly`**: When `true`, normaliseEmail converts non-ASCII to ASCII, validateEmail rejects non-ASCII
 - **`fixDomains`**: Merges with built-in domain corrections (67+ defaults)
 - **`fixTlds`**: Merges with built-in TLD corrections (51+ defaults)  
 - **`blocklist`**: Completely replaces default blocklist when provided
@@ -839,12 +840,13 @@ Import only the functions you need to minimize bundle size:
 import { normaliseEmail } from '@cartoonclouds/email-normaliser/utils/email/normaliseEmail'
 import { validateEmail } from '@cartoonclouds/email-normaliser/utils/email/validateEmail'
 import { aiSuggestEmailDomain } from '@cartoonclouds/email-normaliser/utils/email/aiSuggestEmail'
+import { DEFAULT_AI_EMBEDDING_CANDIDATES } from '@cartoonclouds/email-normaliser/utils/email/constants'
 
 // Fuzzy domain matching utilities
 import { 
   levenshtein, 
   findClosestDomain, 
-  DEFAULT_CANDIDATES 
+  DEFAULT_FUZZY_DOMAIN_CANDIDATES 
 } from '@cartoonclouds/email-normaliser/utils/email/fuzzyDomainMatching'
 
 // Vue-specific imports
@@ -890,7 +892,7 @@ const results = emails.map(email => {
   const result = normaliseEmail(email)
   return {
     original: email,
-    normalized: result.email,
+    normalised: result.email,
     valid: result.valid,
     changes: result.changes
   }
@@ -899,7 +901,7 @@ const results = emails.map(email => {
 // Filter out invalid emails
 const validEmails = results
   .filter(r => r.valid)
-  .map(r => r.normalized)
+  .map(r => r.normalised)
 ```
 
 ### Integration with Forms Libraries
@@ -984,6 +986,15 @@ Contributions are welcome! Please read our contributing guidelines and submit pu
 - 📊 **100% code coverage** for fuzzy matching with 52 comprehensive tests
 - 📚 **Enhanced Type Documentation** - Comprehensive JSDoc with examples for all types
 - 🔄 **Full backward compatibility** - existing code unchanged
-- 🧪 **340+ comprehensive tests** covering all functionality
+- 🧪 **382+ comprehensive tests** covering all functionality
+- 🛠️ **Advanced Testing Infrastructure** - Simplified mock strategies for complex TypeScript interfaces
 
 **Note**: The AI-powered domain suggestions require downloading transformer models (~23MB) on first use. This happens automatically in the browser or Node.js environment.
+
+### Testing & TypeScript
+
+The library uses advanced testing strategies to handle complex third-party integrations:
+
+- **Mock Simplification**: TypeScript interface mocking uses type assertions (`as any`) for test efficiency
+- **AI Model Testing**: Comprehensive test coverage for `@xenova/transformers` integration without full interface implementation
+- **Type Safety**: Maintains full type safety in production while using pragmatic approaches in tests

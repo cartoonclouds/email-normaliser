@@ -90,7 +90,7 @@ describe('email directive', () => {
       expect(capturedOptions).toEqual({
         autoFormat: false,
         previewSelector: undefined,
-        onNormalized: undefined,
+        onnormalised: undefined,
         blocklist: DEFAULT_BLOCKLIST,
         fixDomains: DEFAULT_FIX_DOMAINS,
         fixTlds: DEFAULT_FIX_TLDS,
@@ -108,7 +108,7 @@ describe('email directive', () => {
       }
       const customFixDomains = { 'typo.com': 'correct.com' }
       const customFixTlds = { '.cm': '.com' }
-      const onNormalizedCallback = vi.fn()
+      const onnormalisedCallback = vi.fn()
 
       let capturedOptions: any = null
       mockNormaliseEmail.mockImplementation((email: string, options: any) => {
@@ -125,7 +125,7 @@ describe('email directive', () => {
         value: {
           autoFormat: true,
           previewSelector: '#email-preview',
-          onNormalized: onNormalizedCallback,
+          onnormalised: onnormalisedCallback,
           blocklist: customBlocklist,
           fixDomains: customFixDomains,
           fixTlds: customFixTlds,
@@ -138,7 +138,7 @@ describe('email directive', () => {
 
       expect(capturedOptions.autoFormat).toBe(true)
       expect(capturedOptions.previewSelector).toBe('#email-preview')
-      expect(capturedOptions.onNormalized).toBe(onNormalizedCallback)
+      expect(capturedOptions.onnormalised).toBe(onnormalisedCallback)
       expect(capturedOptions.blocklist).toEqual({
         ...DEFAULT_BLOCKLIST,
         ...customBlocklist,
@@ -405,8 +405,8 @@ describe('email directive', () => {
   })
 
   describe('run function (via events)', () => {
-    it('should call onNormalized callback when provided and result is invalid', () => {
-      const onNormalizedCallback = vi.fn()
+    it('should call onnormalised callback when provided and result is invalid', () => {
+      const onnormalisedCallback = vi.fn()
 
       mockNormaliseEmail.mockReturnValue({
         email: null,
@@ -417,11 +417,11 @@ describe('email directive', () => {
 
       emailDirective.mounted(input, {
         value: {
-          onNormalized: onNormalizedCallback,
+          onnormalised: onnormalisedCallback,
         },
       })
 
-      expect(onNormalizedCallback).toHaveBeenCalledWith({
+      expect(onnormalisedCallback).toHaveBeenCalledWith({
         email: null,
         valid: false,
         changes: [],
@@ -429,8 +429,8 @@ describe('email directive', () => {
       })
     })
 
-    it('should not call onNormalized callback when result is valid', () => {
-      const onNormalizedCallback = vi.fn()
+    it('should not call onnormalised callback when result is valid', () => {
+      const onnormalisedCallback = vi.fn()
 
       mockNormaliseEmail.mockReturnValue({
         email: 'test@example.com',
@@ -441,16 +441,16 @@ describe('email directive', () => {
 
       emailDirective.mounted(input, {
         value: {
-          onNormalized: onNormalizedCallback,
+          onnormalised: onnormalisedCallback,
         },
       })
 
-      expect(onNormalizedCallback).not.toHaveBeenCalled()
+      expect(onnormalisedCallback).not.toHaveBeenCalled()
     })
 
     it('should dispatch custom event when result is invalid', () => {
       const eventSpy = vi.fn()
-      input.addEventListener('directive:email:normalized', eventSpy)
+      input.addEventListener('directive:email:normalised', eventSpy)
 
       mockNormaliseEmail.mockReturnValue({
         email: null,
@@ -463,7 +463,7 @@ describe('email directive', () => {
 
       expect(eventSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          type: 'directive:email:normalized',
+          type: 'directive:email:normalised',
           detail: {
             email: null,
             valid: false,
@@ -476,7 +476,7 @@ describe('email directive', () => {
 
     it('should not dispatch custom event when result is valid', () => {
       const eventSpy = vi.fn()
-      input.addEventListener('directive:email:normalized', eventSpy)
+      input.addEventListener('directive:email:normalised', eventSpy)
 
       mockNormaliseEmail.mockReturnValue({
         email: 'test@example.com',
@@ -536,7 +536,7 @@ describe('email directive', () => {
       expect(input.value).toBe(originalValue)
     })
 
-    it('should not auto-format when normalized email is null', () => {
+    it('should not auto-format when normalised email is null', () => {
       mockNormaliseEmail.mockReturnValue({
         email: null,
         valid: false,
@@ -555,7 +555,7 @@ describe('email directive', () => {
       expect(input.value).toBe(originalValue)
     })
 
-    it('should not auto-format when raw value equals normalized email', () => {
+    it('should not auto-format when raw value equals normalised email', () => {
       mockNormaliseEmail.mockReturnValue({
         email: 'test@example.com',
         valid: true,
@@ -569,7 +569,7 @@ describe('email directive', () => {
 
       input.value = 'test@example.com'
 
-      // The directive should not auto-format when the value is already normalized
+      // The directive should not auto-format when the value is already normalised
       // We check this by verifying the value doesn't change
       const originalValue = input.value
       input.dispatchEvent(new Event('input'))
@@ -752,7 +752,7 @@ describe('email directive', () => {
 
   describe('integration scenarios', () => {
     it('should handle complete workflow with all features enabled', async () => {
-      const onNormalizedCallback = vi.fn()
+      const onnormalisedCallback = vi.fn()
 
       mockNormaliseEmail
         .mockReturnValueOnce({
@@ -772,7 +772,7 @@ describe('email directive', () => {
         value: {
           autoFormat: true,
           previewSelector: '#email-preview',
-          onNormalized: onNormalizedCallback,
+          onnormalised: onnormalisedCallback,
           autoFormatEvents: {
             onInput: true,
             onBlur: true,
@@ -780,25 +780,25 @@ describe('email directive', () => {
         },
       })
 
-      // Initial mount with empty value should call onNormalized
-      expect(onNormalizedCallback).toHaveBeenCalledWith({
+      // Initial mount with empty value should call onnormalised
+      expect(onnormalisedCallback).toHaveBeenCalledWith({
         email: null,
         valid: false,
         changes: [],
         changeCodes: [],
       })
 
-      onNormalizedCallback.mockClear()
+      onnormalisedCallback.mockClear()
 
       // Simulate user input
       input.value = 'Test@Example.Com'
       input.dispatchEvent(new Event('input'))
 
-      // Should auto-format and not call onNormalized (because valid)
+      // Should auto-format and not call onnormalised (because valid)
       expect(input.value).toBe('test@example.com')
       expect(previewElement.textContent).toBe('test@example.com')
       expect(previewElement.getAttribute('data-valid')).toBe('true')
-      expect(onNormalizedCallback).not.toHaveBeenCalled()
+      expect(onnormalisedCallback).not.toHaveBeenCalled()
     })
 
     it('should handle options merging correctly with custom values', () => {

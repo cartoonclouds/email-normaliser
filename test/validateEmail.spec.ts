@@ -1633,7 +1633,7 @@ describe('validateEmail', () => {
             fuzzyMatching: {
               enabled: true,
               minConfidence: 0.5, // Lower threshold to accommodate gmailx.net (0.6 confidence)
-              findClosestOptions: { normalize: true },
+              findClosestOptions: { normalise: true },
             },
           })
           // Should work with lower confidence threshold

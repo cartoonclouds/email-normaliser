@@ -79,7 +79,7 @@ describe('normaliseEmail', () => {
       const result = normaliseEmail('  John Doe <john＠gmail．co,uk>;  ')
       expect(result.valid).toBe(true)
       expect(result.changeCodes).toContain(
-        EmailChangeCodes.NORMALIZED_UNICODE_SYMBOLS
+        EmailChangeCodes.NORMALISED_UNICODE_SYMBOLS
       )
       expect(result.changeCodes).toContain(
         EmailChangeCodes.STRIPPED_DISPLAY_NAME_AND_COMMENTS
@@ -95,7 +95,7 @@ describe('normaliseEmail', () => {
       const result = normaliseEmail('test＠gmail.com')
       expect(result.email).toBe('test@gmail.com')
       expect(result.changeCodes).toContain(
-        EmailChangeCodes.NORMALIZED_UNICODE_SYMBOLS
+        EmailChangeCodes.NORMALISED_UNICODE_SYMBOLS
       )
     })
 
@@ -103,7 +103,7 @@ describe('normaliseEmail', () => {
       const result = normaliseEmail('test@gmail．com')
       expect(result.email).toBe('test@gmail.com')
       expect(result.changeCodes).toContain(
-        EmailChangeCodes.NORMALIZED_UNICODE_SYMBOLS
+        EmailChangeCodes.NORMALISED_UNICODE_SYMBOLS
       )
     })
 
@@ -111,7 +111,7 @@ describe('normaliseEmail', () => {
       const result = normaliseEmail('test@gmail。com')
       expect(result.email).toBe('test@gmail.com')
       expect(result.changeCodes).toContain(
-        EmailChangeCodes.NORMALIZED_UNICODE_SYMBOLS
+        EmailChangeCodes.NORMALISED_UNICODE_SYMBOLS
       )
     })
 
@@ -119,14 +119,14 @@ describe('normaliseEmail', () => {
       const result = normaliseEmail('test＠domain．co。uk')
       expect(result.email).toBe('test@domain.co.uk')
       expect(result.changeCodes).toContain(
-        EmailChangeCodes.NORMALIZED_UNICODE_SYMBOLS
+        EmailChangeCodes.NORMALISED_UNICODE_SYMBOLS
       )
     })
 
     it('does not change already ASCII emails', () => {
       const result = normaliseEmail('test@domain.com')
       expect(result.changeCodes).not.toContain(
-        EmailChangeCodes.NORMALIZED_UNICODE_SYMBOLS
+        EmailChangeCodes.NORMALISED_UNICODE_SYMBOLS
       )
     })
   })
@@ -857,14 +857,14 @@ describe('normaliseEmail', () => {
       }
     })
 
-    it('accepts emails that are normalized to valid shapes', () => {
+    it('accepts emails that are normalised to valid shapes', () => {
       // These may look invalid but become valid after normalization
-      const normalizedEmails = [
+      const normalisedEmails = [
         'user@@domain.com', // becomes user@domain.com
         'user@domain..com', // becomes user@domain.com
       ]
 
-      for (const email of normalizedEmails) {
+      for (const email of normalisedEmails) {
         const result = normaliseEmail(email)
         expect(result.valid).toBe(true)
       }
@@ -1129,7 +1129,7 @@ describe('normaliseEmail', () => {
   })
 
   describe('comprehensive integration tests', () => {
-    it('normalizes heavily obfuscated email', () => {
+    it('normalises heavily obfuscated email', () => {
       const input = '  John Doe (CEO) < john ＠ gmail ． co,uk > (Company) ; '
       const result = normaliseEmail(input)
 
@@ -1137,7 +1137,7 @@ describe('normaliseEmail', () => {
       expect(result.email).toBe('john@gmail.co.uk')
       expect(result.changeCodes).toEqual(
         expect.arrayContaining([
-          EmailChangeCodes.NORMALIZED_UNICODE_SYMBOLS,
+          EmailChangeCodes.NORMALISED_UNICODE_SYMBOLS,
           EmailChangeCodes.STRIPPED_DISPLAY_NAME_AND_COMMENTS,
           EmailChangeCodes.TIDIED_PUNCTUATION_AND_SPACING,
         ])

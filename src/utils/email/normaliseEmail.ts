@@ -1,3 +1,4 @@
+import { aiSuggestEmailDomain } from './aiSuggestEmail'
 import {
   DEFAULT_BLOCKLIST,
   DEFAULT_FIX_DOMAINS,
@@ -8,9 +9,12 @@ import {
 } from './constants'
 import { findClosestDomain } from './fuzzyDomainMatching'
 import type {
+  AiEmailOptions,
   EmailFixResult,
   EmailNormOptions,
+  EmailNormOptionsAI,
   EmailNormResult,
+  EmailNormResultAI,
   FindClosestOptions,
 } from './types'
 import { blocklisted, isEmpty, looksLikeEmail } from './validateEmail'
@@ -18,7 +22,7 @@ import { blocklisted, isEmpty, looksLikeEmail } from './validateEmail'
 // --- helpers -------------------------------------------------------
 
 /**
- * Normalize fullwidth/Unicode variants of @ and .
+ * Normalise fullwidth/Unicode variants of @ and .
  *
  * @param {string} s
  * @returns {EmailFixResult}
@@ -259,7 +263,7 @@ function applyMaps(
     }
   }
 
-  // normalize casing of local minimally: keep as-is but trim quotes
+  // normalise casing of local minimally: keep as-is but trim quotes
   const originalLocal = local
   local = local.replace(/^"(.*)"$/, '$1')
 
@@ -283,7 +287,7 @@ function applyMaps(
  */
 export function changeCodeToReason(code: EmailChangeCode): string | null {
   switch (code) {
-    case EmailChangeCodes.NORMALIZED_UNICODE_SYMBOLS:
+    case EmailChangeCodes.NORMALISED_UNICODE_SYMBOLS:
       return 'Replaced unicode symbols.'
 
     case EmailChangeCodes.INVALID_EMAIL_SHAPE:
@@ -387,7 +391,7 @@ function performFuzzyDomainNormalization(
   if (
     result.candidate &&
     result.candidate !== domainPart.toLowerCase() &&
-    result.normalizedScore >= minConfidence &&
+    result.normalisedScore >= minConfidence &&
     result.distance > 0
   ) {
     const correctedEmail = `${localPart}@${result.candidate}`
@@ -402,7 +406,7 @@ function performFuzzyDomainNormalization(
 // --- main ----------------------------------------------------------
 
 /**
- * Normalize and validate an email address.
+ * Normalise and validate an email address.
  *
  * @param {string} raw
  * @param {EmailNormOptions} opts
@@ -430,7 +434,7 @@ export function normaliseEmail(
     const r = toAsciiLike(s)
     if (r.changed) {
       s = r.out
-      changes.push(EmailChangeCodes.NORMALIZED_UNICODE_SYMBOLS)
+      changes.push(EmailChangeCodes.NORMALISED_UNICODE_SYMBOLS)
     }
   }
 
@@ -609,3 +613,100 @@ export function normaliseEmail(
  *
  * For most web applications, focusing on the basic alphanumeric characters plus `.-_+` for the local part and `.-` for the domain part will cover 99%+ of real-world email addresses.
  */
+
+/**
+ * Async version: uses the same normalization flow and, if invalid (or dubious),
+ * queries transformers.js embeddings to suggest a domain.
+ *
+ * @example
+ * const result = await normaliseEmailWithAI("user@gmai.com", {
+ *   ai: {
+ *     enabled: true,
+ *     model: "Xenova/all-MiniLM-L6-v2",
+ *     candidates: ["gmail.com", "googlemail.com"],
+ *     threshold: 0.8,
+ *     maxEdits: 2,
+ *   },
+ * });
+ * if (result.valid) {
+ *   console.log(`Normalized email: ${result.email}`);
+ * } else if (result.ai) {
+ *   console.log(`Did you mean: ${result.email.split('@')[0]}@${result.ai.domain}? (confidence: ${result.ai.confidence})`);
+ * }
+ * ```
+ *
+ * @param {string} raw
+ * @param {EmailNormOptionsAI} opts
+ * @returns {Promise<EmailNormResultAI>}
+ */
+export async function normaliseEmailWithAI(
+  raw: string,
+  opts: EmailNormOptionsAI = {}
+): Promise<EmailNormResultAI> {
+  const base = normaliseEmail(raw, opts) // run your existing, synchronous logic first
+
+  // If already valid, optionally still verify domain against candidates and attach ai meta (no change)
+  if (base.valid || !opts.ai?.enabled) {
+    return base as EmailNormResultAI
+  }
+
+  const at = String(raw).lastIndexOf('@')
+  if (at < 0) return base as EmailNormResultAI
+
+  const domainRaw = String(raw).slice(at + 1)
+  const aiOpts: AiEmailOptions = {
+    model: opts.ai?.model,
+    candidates: opts.ai?.candidates,
+    threshold: opts.ai?.threshold,
+    maxEdits: opts.ai?.maxEdits,
+  }
+
+  try {
+    const hit = await aiSuggestEmailDomain(domainRaw, aiOpts)
+    if (!hit) return base as EmailNormResultAI
+
+    // Don't auto-accept if the domain is blocklisted
+    const cfg = opts.blocklist
+    const blocked = cfg
+      ? ((): boolean => {
+          const d = hit.suggestion.toLowerCase()
+          const exact = (cfg.block?.exact ?? []).map((s: string) =>
+            s.toLowerCase()
+          )
+          if (exact.includes(d)) return true
+          for (const t of cfg.block?.tlds ?? [])
+            if (d.endsWith(String(t).toLowerCase())) return true
+          for (const s of cfg.block?.suffix ?? [])
+            if (d.endsWith(String(s).toLowerCase())) return true
+          for (const w of cfg.block?.wildcard ?? []) {
+            const re = new RegExp(
+              '^' +
+                String(w)
+                  .toLowerCase()
+                  .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+                  .replace(/\*/g, '.*')
+                  .replace(/\?/g, '.') +
+                '$',
+              'i'
+            )
+            if (re.test(d)) return true
+          }
+          return false
+        })()
+      : false
+
+    if (blocked) return base as EmailNormResultAI
+
+    // Provide suggestion (UI can display “Did you mean local@<suggestion>?”)
+    return {
+      ...base,
+      ai: {
+        domain: hit.suggestion,
+        confidence: hit.confidence,
+        reason: hit.reason,
+      },
+    }
+  } catch {
+    return base as EmailNormResultAI
+  }
+}

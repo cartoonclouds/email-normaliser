@@ -16,7 +16,7 @@ vi.mock('../src/utils/email/normaliseEmail', () => ({
     FIXED_DOMAIN_AND_TLD_TYPOS: 'fixed_domain_and_tld_typos',
     INVALID_EMAIL_SHAPE: 'invalid_email_shape',
     LOWERCASED_DOMAIN: 'lowercased_domain',
-    NORMALIZED_UNICODE_SYMBOLS: 'normalized_unicode_symbols',
+    NORMALISED_UNICODE_SYMBOLS: 'normalised_unicode_symbols',
     STRIPPED_DISPLAY_NAME_AND_COMMENTS: 'stripped_display_name_and_comments',
     TIDIED_PUNCTUATION_AND_SPACING: 'tidied_punctuation_and_spacing',
   },
@@ -84,7 +84,7 @@ describe('useEmail', () => {
   describe('computed properties', () => {
     it('should compute email from normalisation result', () => {
       mockNormaliseEmail.mockReturnValue({
-        email: 'normalized@example.com',
+        email: 'normalised@example.com',
         valid: true,
         changes: [],
         changeCodes: [],
@@ -92,7 +92,7 @@ describe('useEmail', () => {
 
       const { email } = useEmail('original@example.com')
 
-      expect(email.value).toBe('normalized@example.com')
+      expect(email.value).toBe('normalised@example.com')
     })
 
     it('should compute email as null when normalisation returns null', () => {
@@ -166,7 +166,7 @@ describe('useEmail', () => {
   })
 
   describe('apply method', () => {
-    it('should update value when normalized email differs from current value', () => {
+    it('should update value when normalised email differs from current value', () => {
       mockNormaliseEmail.mockReturnValue({
         email: 'test@example.com',
         valid: true,
@@ -183,7 +183,7 @@ describe('useEmail', () => {
       expect(value.value).toBe('test@example.com')
     })
 
-    it('should not update value when normalized email is null', () => {
+    it('should not update value when normalised email is null', () => {
       mockNormaliseEmail.mockReturnValue({
         email: null,
         valid: false,
@@ -198,7 +198,7 @@ describe('useEmail', () => {
       expect(value.value).toBe('invalid')
     })
 
-    it('should not update value when normalized email is same as current value', () => {
+    it('should not update value when normalised email is same as current value', () => {
       mockNormaliseEmail.mockReturnValue({
         email: 'test@example.com',
         valid: true,
@@ -213,7 +213,7 @@ describe('useEmail', () => {
       expect(value.value).toBe('test@example.com')
     })
 
-    it('should not update value when normalized email is empty string', () => {
+    it('should not update value when normalised email is empty string', () => {
       mockNormaliseEmail.mockReturnValue({
         email: '',
         valid: false,
@@ -306,7 +306,7 @@ describe('useEmail', () => {
       expect(valid.value).toBe(false)
     })
 
-    it('should auto-format when autoFormat is true and normalized email differs', async () => {
+    it('should auto-format when autoFormat is true and normalised email differs', async () => {
       mockNormaliseEmail.mockReturnValue({
         email: 'test@example.com',
         valid: true,
@@ -339,7 +339,7 @@ describe('useEmail', () => {
       expect(value.value).toBe(original)
     })
 
-    it('should not auto-format when normalized email is null', async () => {
+    it('should not auto-format when normalised email is null', async () => {
       mockNormaliseEmail.mockReturnValue({
         email: null,
         valid: false,
@@ -356,7 +356,7 @@ describe('useEmail', () => {
       expect(value.value).toBe(original)
     })
 
-    it('should not auto-format when normalized email is same as current value', async () => {
+    it('should not auto-format when normalised email is same as current value', async () => {
       mockNormaliseEmail.mockReturnValue({
         email: 'test@example.com',
         valid: true,
@@ -373,7 +373,7 @@ describe('useEmail', () => {
       expect(value.value).toBe(original)
     })
 
-    it('should not auto-format when normalized email is empty', async () => {
+    it('should not auto-format when normalised email is empty', async () => {
       mockNormaliseEmail.mockReturnValue({
         email: '',
         valid: false,

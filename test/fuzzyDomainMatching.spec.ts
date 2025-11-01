@@ -41,13 +41,13 @@ describe('Type exports', () => {
       input: 'test.com',
       candidate: 'gmail.com',
       distance: 5,
-      normalizedScore: 0.5,
+      normalisedScore: 0.5,
       index: 0,
     }
     expect(result.input).toBe('test.com')
     expect(result.candidate).toBe('gmail.com')
     expect(result.distance).toBe(5)
-    expect(result.normalizedScore).toBe(0.5)
+    expect(result.normalisedScore).toBe(0.5)
     expect(result.index).toBe(0)
   })
 
@@ -56,12 +56,12 @@ describe('Type exports', () => {
     const opts2: FindClosestOptions = {
       candidates: ['test.com'],
       maxDistance: 3,
-      normalize: false,
+      normalise: false,
     }
     expect(opts1).toEqual({})
     expect(opts2.candidates).toEqual(['test.com'])
     expect(opts2.maxDistance).toBe(3)
-    expect(opts2.normalize).toBe(false)
+    expect(opts2.normalise).toBe(false)
   })
 })
 
@@ -168,7 +168,7 @@ describe('findClosestDomain()', () => {
       const res = findClosestDomain('gmail.com')
       expect(res.candidate).toBe('gmail.com')
       expect(res.distance).toBe(0)
-      expect(res.normalizedScore).toBe(1)
+      expect(res.normalisedScore).toBe(1)
       expect(res.index).toBe(
         DEFAULT_FUZZY_DOMAIN_CANDIDATES.indexOf('gmail.com')
       )
@@ -180,7 +180,7 @@ describe('findClosestDomain()', () => {
       })
       expect(res.candidate).toBe('custom.com')
       expect(res.distance).toBe(0)
-      expect(res.normalizedScore).toBe(1)
+      expect(res.normalisedScore).toBe(1)
     })
 
     it('breaks early on perfect match', () => {
@@ -198,7 +198,7 @@ describe('findClosestDomain()', () => {
       const res = findClosestDomain('gmai.com') // missing 'l'
       expect(res.candidate).toBe('gmail.com')
       expect(res.distance).toBe(1)
-      expect(res.normalizedScore).toBeGreaterThan(0.8)
+      expect(res.normalisedScore).toBeGreaterThan(0.8)
     })
 
     it('works with UK ISP domains in defaults', () => {
@@ -251,7 +251,7 @@ describe('findClosestDomain()', () => {
       const res = findClosestDomain('completely-wrong.tld', { maxDistance: 2 })
       expect(res.candidate).toBeNull()
       expect(res.index).toBe(-1)
-      expect(res.normalizedScore).toBe(0)
+      expect(res.normalisedScore).toBe(0)
     })
 
     it('includes candidates within threshold', () => {
@@ -274,22 +274,22 @@ describe('findClosestDomain()', () => {
   })
 
   describe('normalization', () => {
-    it('normalizes input/candidates (lowercase + trim) by default', () => {
+    it('normalises input/candidates (lowercase + trim) by default', () => {
       const res = findClosestDomain('  Gmail.COM  ')
       expect(res.candidate).toBe('gmail.com')
       expect(res.distance).toBe(0)
     })
 
     it('can disable normalization', () => {
-      const res = findClosestDomain('Gmail.COM', { normalize: false })
+      const res = findClosestDomain('Gmail.COM', { normalise: false })
       // Without normalization, distance reflects case differences
       expect(res.distance).toBeGreaterThan(0)
     })
 
-    it('normalizes custom candidates when enabled', () => {
+    it('normalises custom candidates when enabled', () => {
       const res = findClosestDomain('CUSTOM.COM', {
         candidates: ['  Custom.COM  '],
-        normalize: true,
+        normalise: true,
       })
       expect(res.candidate).toBe('custom.com')
       expect(res.distance).toBe(0)
@@ -298,7 +298,7 @@ describe('findClosestDomain()', () => {
     it('preserves case when normalization disabled', () => {
       const res = findClosestDomain('Custom.COM', {
         candidates: ['Custom.COM'],
-        normalize: false,
+        normalise: false,
       })
       expect(res.candidate).toBe('Custom.COM')
       expect(res.distance).toBe(0)
@@ -306,21 +306,21 @@ describe('findClosestDomain()', () => {
   })
 
   describe('score calculation', () => {
-    it('calculates normalized score correctly', () => {
+    it('calculates normalised score correctly', () => {
       const res = findClosestDomain('gmai.com') // 1 edit, 9 chars
-      expect(res.normalizedScore).toBeCloseTo(1 - 1 / 9, 2)
+      expect(res.normalisedScore).toBeCloseTo(1 - 1 / 9, 2)
     })
 
     it('handles score calculation when candidate is null', () => {
       const res = findClosestDomain('totally-wrong', { maxDistance: 1 })
       if (res.candidate === null) {
-        expect(res.normalizedScore).toBe(0)
+        expect(res.normalisedScore).toBe(0)
       }
     })
 
     it('handles score calculation with empty strings', () => {
       const res = findClosestDomain('', { candidates: [''] })
-      expect(res.normalizedScore).toBe(1) // perfect match
+      expect(res.normalisedScore).toBe(1) // perfect match
     })
 
     it('uses max length for denominator', () => {
@@ -328,14 +328,14 @@ describe('findClosestDomain()', () => {
       const res = findClosestDomain('verylongdomain.com', {
         candidates: ['short.com'],
       })
-      expect(res.normalizedScore).toBeGreaterThan(0)
-      expect(res.normalizedScore).toBeLessThan(1)
+      expect(res.normalisedScore).toBeGreaterThan(0)
+      expect(res.normalisedScore).toBeLessThan(1)
     })
 
     it('handles denom > 0 check', () => {
       // Edge case where both strings could be empty
       const res = findClosestDomain('', { candidates: [''] })
-      expect(res.normalizedScore).toBe(1)
+      expect(res.normalisedScore).toBe(1)
     })
 
     it('handles edge case in score calculation with bestCandidate null check', () => {
@@ -346,14 +346,14 @@ describe('findClosestDomain()', () => {
       })
       // This should trigger the null candidate path and test the ternary in denom calculation
       expect(res.candidate).toBeNull()
-      expect(res.normalizedScore).toBe(0)
+      expect(res.normalisedScore).toBe(0)
     })
 
     it('covers denom calculation edge case with zero-length scenarios', () => {
       // Ensure we test both branches of: bestCandidate ? bestCandidate.length : 1
       const resWithCandidate = findClosestDomain('', { candidates: ['a'] })
       expect(resWithCandidate.candidate).toBe('a')
-      expect(resWithCandidate.normalizedScore).toBeLessThan(1)
+      expect(resWithCandidate.normalisedScore).toBeLessThan(1)
 
       // Force null candidate to test the : 1 branch in denom calculation
       const resNullCandidate = findClosestDomain('verylongstring', {
@@ -361,7 +361,7 @@ describe('findClosestDomain()', () => {
         maxDistance: 1,
       })
       if (resNullCandidate.candidate === null) {
-        expect(resNullCandidate.normalizedScore).toBe(0)
+        expect(resNullCandidate.normalisedScore).toBe(0)
       }
     })
   })
@@ -372,20 +372,20 @@ describe('findClosestDomain()', () => {
       expect(res).toHaveProperty('input')
       expect(res).toHaveProperty('candidate')
       expect(res).toHaveProperty('distance')
-      expect(res).toHaveProperty('normalizedScore')
+      expect(res).toHaveProperty('normalisedScore')
       expect(res).toHaveProperty('index')
 
       expect(res.input).toBe('gmai.com')
       expect(typeof res.candidate).toBe('string')
       expect(typeof res.distance).toBe('number')
-      expect(typeof res.normalizedScore).toBe('number')
+      expect(typeof res.normalisedScore).toBe('number')
       expect(typeof res.index).toBe('number')
     })
 
     it('preserves original input in result', () => {
       const input = '  GMAI.COM  '
       const res = findClosestDomain(input)
-      expect(res.input).toBe(input) // original, not normalized
+      expect(res.input).toBe(input) // original, not normalised
     })
   })
 

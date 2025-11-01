@@ -11,7 +11,7 @@ import type { EmailBlockConfig } from './types'
  * ```typescript
  * // "gamil.com" will be corrected to "gmail.com"
  * // "hotmial.com" will be corrected to "hotmail.com"
- * normaliseEmail('user@gamil.com') // Returns email normalized to 'user@gmail.com'
+ * normaliseEmail('user@gamil.com') // Returns email normalised to 'user@gmail.com'
  * ```
  *
  * Categories included:
@@ -127,7 +127,7 @@ export const DEFAULT_FIX_DOMAINS: Record<string, string> = {
  * ```typescript
  * // ".con" will be corrected to ".com"
  * // ".co,uk" will be corrected to ".co.uk"
- * normaliseEmail('user@example.con') // Returns email normalized to 'user@example.com'
+ * normaliseEmail('user@example.con') // Returns email normalised to 'user@example.com'
  * ```
  *
  * Categories included:
@@ -326,12 +326,12 @@ export const EmailChangeCodes = Object.freeze({
   FIXED_DOMAIN_AND_TLD_TYPOS: 'fixed_domain_and_tld_typos',
   /** Applied fuzzy domain matching to correct likely domain typos */
   FUZZY_DOMAIN_CORRECTION: 'fuzzy_domain_correction',
-  /** Email format was invalid and could not be normalized */
+  /** Email format was invalid and could not be normalised */
   INVALID_EMAIL_SHAPE: 'invalid_email_shape',
   /** Converted domain part to lowercase */
   LOWERCASED_DOMAIN: 'lowercased_domain',
   /** Converted Unicode symbols (＠, ．, 。) to ASCII equivalents */
-  NORMALIZED_UNICODE_SYMBOLS: 'normalized_unicode_symbols',
+  NORMALISED_UNICODE_SYMBOLS: 'normalised_unicode_symbols',
   /** Removed display names, comments, or angle bracket formatting */
   STRIPPED_DISPLAY_NAME_AND_COMMENTS: 'stripped_display_name_and_comments',
   /** Cleaned up spacing, punctuation, and formatting issues */
@@ -406,4 +406,58 @@ export const DEFAULT_FUZZY_DOMAIN_CANDIDATES = [
   'blueyonder.co.uk',
   'ntlworld.com',
   'ntlworld.co.uk',
+] as const
+
+/**
+ * Default list of email domains used for AI embedding-based domain suggestions.
+ *
+ * This readonly array contains a comprehensive list of common email service provider
+ * domains plus popular SaaS/corporate domains. It is used as the default candidate
+ * list for AI-powered domain suggestion algorithms that use transformer embeddings
+ * to find semantically similar domain names.
+ *
+ * The list includes consumer email providers, UK ISPs, and common business domains
+ * that users might be trying to type when they make typos.
+ *
+ * @example
+ * ```typescript
+ * // "gmial.com" will be suggested as "gmail.com" using embedding similarity
+ * const suggestion = await aiSuggestEmailDomain('gmial.com', {
+ *   candidates: DEFAULT_AI_EMBEDDING_CANDIDATES
+ * });
+ * console.log(suggestion); // { suggestion: 'gmail.com', confidence: 0.85, reason: 'embedding_similarity' }
+ * ```
+ */
+export const DEFAULT_AI_EMBEDDING_CANDIDATES = [
+  // Consumer email providers
+  'gmail.com',
+  'googlemail.com',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'msn.com',
+  'icloud.com',
+  'me.com',
+  'mac.com',
+  'yahoo.com',
+  'yahoo.co.uk',
+  'proton.me',
+  'fastmail.com',
+  'zoho.com',
+  // UK ISPs
+  'btinternet.co.uk',
+  'virginmedia.com',
+  'virginmedia.co.uk',
+  'blueyonder.co.uk',
+  'ntlworld.com',
+  'ntlworld.co.uk',
+  'talktalk.net',
+  'talktalk.co.uk',
+  'sky.com',
+  'sky.co.uk',
+  // Common SaaS/corporate domains
+  'salesforce.com',
+  'atlassian.com',
+  'slack.com',
+  'github.com',
 ] as const

@@ -339,7 +339,7 @@ function performFuzzyDomainValidation(
   if (
     result.candidate &&
     result.candidate !== domainPart.toLowerCase() &&
-    result.normalizedScore >= minConfidence &&
+    result.normalisedScore >= minConfidence &&
     result.distance > 0
   ) {
     const suggestedEmail = `${localPart}@${result.candidate}`
@@ -350,7 +350,7 @@ function performFuzzyDomainValidation(
       suggestion: {
         originalDomain: domainPart,
         suggestedDomain: result.candidate,
-        confidence: result.normalizedScore,
+        confidence: result.normalisedScore,
       },
     }
   }

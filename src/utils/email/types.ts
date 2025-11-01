@@ -246,9 +246,9 @@ export type EmailValidationOptions = {
  * ```
  */
 export type EmailNormResult = {
-  /** The normalized email address, or null if normalization failed */
+  /** The normalised email address, or null if normalization failed */
   email: string | null
-  /** Whether the final normalized email passes validation */
+  /** Whether the final normalised email passes validation */
   valid: boolean
   /** Human-readable descriptions of all changes made during normalization */
   changes: string[]
@@ -383,7 +383,7 @@ export type DomainCandidate = (typeof DEFAULT_FUZZY_DOMAIN_CANDIDATES)[number]
  *   input: 'gmai.com',
  *   candidate: 'gmail.com',
  *   distance: 1,
- *   normalizedScore: 0.89,
+ *   normalisedScore: 0.89,
  *   index: 0
  * }
  * ```
@@ -395,8 +395,8 @@ export type ClosestDomainResult = {
   candidate: string | null
   /** Edit distance to the best candidate (0 = exact match) */
   distance: number
-  /** Normalized similarity score (0-1, where 1 = exact match) */
-  normalizedScore: number
+  /** normalised similarity score (0-1, where 1 = exact match) */
+  normalisedScore: number
   /** Index of the candidate in the candidates array (-1 if no match) */
   index: number
 }
@@ -409,7 +409,7 @@ export type ClosestDomainResult = {
  * const options: FindClosestOptions = {
  *   candidates: ['gmail.com', 'googlemail.com'],
  *   maxDistance: 2,
- *   normalize: true
+ *   normalise: true
  * }
  *
  * const result = findClosestDomain('gmai.com', options);
@@ -426,9 +426,9 @@ export type FindClosestOptions = {
    */
   maxDistance?: number
   /**
-   * Pre-normalize (lowercase/trim) both input and candidates. Default true.
+   * Pre-normalise (lowercase/trim) both input and candidates. Default true.
    */
-  normalize?: boolean
+  normalise?: boolean
 }
 
 // --- AI Suggestion Types ---
@@ -499,4 +499,34 @@ export type AiEmailOptions = {
 export type UseEmailOptions = EmailNormOptions & {
   /** Whether to automatically apply normalization to the input value */
   autoFormat?: boolean
+}
+
+/**
+ * Options for AI-powered email normalization.
+ *
+ * Extends EmailNormOptions with AI functionality for intelligent domain suggestions.
+ */
+export type EmailNormOptionsAI = EmailNormOptions & {
+  /** AI-powered domain suggestion configuration */
+  ai?: {
+    /** Whether to enable AI domain suggestions */
+    enabled?: boolean
+    /** Transformer model to use for embeddings */
+    model?: string
+    /** Custom candidate domains for suggestions */
+    candidates?: string[]
+    /** Minimum confidence threshold for suggestions */
+    threshold?: number
+    /** Maximum edit distance to consider */
+    maxEdits?: number
+  }
+}
+
+export type EmailNormResultAI = EmailNormResult & {
+  ai?: {
+    // present only if a suggestion is available
+    domain: string
+    confidence: number
+    reason: 'embedding_similarity'
+  }
 }

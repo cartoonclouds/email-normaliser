@@ -87,14 +87,14 @@ export function findClosestDomain(
   const {
     candidates = DEFAULT_FUZZY_DOMAIN_CANDIDATES as Readonly<DomainCandidate[]>,
     maxDistance = Infinity,
-    normalize = true,
+    normalise = true,
   } = opts
   const combinedCandidates: string[] = [
     ...DEFAULT_FUZZY_DOMAIN_CANDIDATES,
     ...candidates,
   ]
 
-  const norm = (s: string) => (normalize ? s.trim().toLowerCase() : s)
+  const norm = (s: string) => (normalise ? s.trim().toLowerCase() : s)
   const q = norm(input)
 
   let bestIdx = -1
@@ -118,19 +118,19 @@ export function findClosestDomain(
       input,
       candidate: null,
       distance: bestDist,
-      normalizedScore: 0,
+      normalisedScore: 0,
       index: -1,
     }
   }
 
   const denom = Math.max(q.length, bestCandidate ? bestCandidate.length : 1)
-  const normalizedScore = denom > 0 ? 1 - bestDist / denom : 1
+  const normalisedScore = denom > 0 ? 1 - bestDist / denom : 1
 
   return {
     input,
     candidate: bestCandidate,
     distance: bestDist,
-    normalizedScore,
+    normalisedScore,
     index: bestIdx,
   }
 }

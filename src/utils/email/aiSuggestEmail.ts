@@ -1,45 +1,17 @@
 import type { FeatureExtractionPipeline } from '@xenova/transformers'
 import { env, pipeline } from '@xenova/transformers'
 
+import { DEFAULT_AI_EMBEDDING_CANDIDATES } from './constants'
 import type { AiEmailOptions, AiEmailSuggestion } from './types'
 
 // Configure transformers.js
-env.allowRemoteModels = true
-// Optionally: env.localModelPath = '/transformers/' // if you self-host models
-
-const DEFAULT_CANDIDATES = [
-  // consumer providers
-  'gmail.com',
-  'googlemail.com',
-  'outlook.com',
-  'hotmail.com',
-  'live.com',
-  'msn.com',
-  'icloud.com',
-  'me.com',
-  'mac.com',
-  'yahoo.com',
-  'yahoo.co.uk',
-  'proton.me',
-  'fastmail.com',
-  'zoho.com',
-  // UK ISPs
-  'btinternet.co.uk',
-  'virginmedia.com',
-  'virginmedia.co.uk',
-  'blueyonder.co.uk',
-  'ntlworld.com',
-  'ntlworld.co.uk',
-  'talktalk.net',
-  'talktalk.co.uk',
-  'sky.com',
-  'sky.co.uk',
-  // common SaaS/corp
-  'salesforce.com',
-  'atlassian.com',
-  'slack.com',
-  'github.com',
-]
+// Allow remote models in test environment, otherwise use local only
+env.allowRemoteModels =
+  process.env.NODE_ENV === 'test' || process.env.ALLOW_REMOTE_MODELS === 'true'
+env.allowLocalModels = true
+env.cacheDir = './public/models' // where models are cached
+// and point ORT WASM to your local /onnx/ if you're using the browser backend
+// env.backends.onnx.wasm.wasmPaths = '/onnx/'
 
 let extractorPromise: Promise<FeatureExtractionPipeline> | null = null
 const cache = new Map<string, Float32Array>()
@@ -99,24 +71,29 @@ export async function aiSuggestEmailDomain(
   const candidates = (
     options.candidates && options.candidates.length
       ? options.candidates
-      : DEFAULT_CANDIDATES
+      : DEFAULT_AI_EMBEDDING_CANDIDATES
   ).map((x) => x.toLowerCase())
 
   const extractor = await getExtractor(model)
 
   async function embed(text: string): Promise<Float32Array> {
     if (cache.has(text)) return cache.get(text)!
-    const output = (await extractor(text, {
+    const output = await extractor(text, {
       pooling: 'mean',
       normalize: true,
-    })) as unknown as number[] | number[][]
-    // pipeline returns tensor → array; ensure Float32Array
-    const arr = Array.isArray(output[0])
-      ? (output as number[][])[0]
-      : (output as number[])
-    const v = new Float32Array(arr)
-    cache.set(text, v)
-    return v
+    })
+
+    // Both real @xenova/transformers and our mocks return Tensor objects with .data property
+    if (output && typeof output === 'object' && 'data' in output) {
+      const arr = Array.from(output.data as Float32Array)
+      const v = new Float32Array(arr)
+      cache.set(text, v)
+      return v
+    }
+
+    throw new Error(
+      `Unexpected output format from feature extraction: expected Tensor object with .data property`
+    )
   }
 
   const q = await embed(d)
@@ -138,4 +115,10 @@ export async function aiSuggestEmailDomain(
     confidence: best.sim,
     reason: 'embedding_similarity',
   }
+}
+
+// Export cache clearing function for testing
+export function __clearCache() {
+  extractorPromise = null
+  cache.clear()
 }

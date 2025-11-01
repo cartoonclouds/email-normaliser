@@ -12,7 +12,7 @@ import type { EmailNormOptions } from '../utils/email/types'
  *
  * Usage:
  * <input v-email="{ autoFormat: true, previewSelector: '#emailPreview' }" />
- * <input v-email="{ onNormalized: (result) => console.log(result) }" />
+ * <input v-email="{ onnormalised: (result) => console.log(result) }" />
  */
 export type EmailOpts = EmailNormOptions & {
   /**
@@ -31,16 +31,16 @@ export type EmailOpts = EmailNormOptions & {
     onBlur?: boolean
   }
   /**
-   * CSS selector for an element to preview the normalized email and its validity
+   * CSS selector for an element to preview the normalised email and its validity
    */
   previewSelector?: string
   /**
-   * Callback function called when the email is normalized
+   * Callback function called when the email is normalised
    *
    * @param {ReturnType<typeof normaliseEmail>} r The result of the normalization
    * @returns void
    */
-  onNormalized?: (r: ReturnType<typeof normaliseEmail>) => void
+  onnormalised?: (r: ReturnType<typeof normaliseEmail>) => void
 }
 
 /**
@@ -80,7 +80,7 @@ function resolve(
   const opts: EmailOpts = {
     autoFormat: !!value.autoFormat,
     previewSelector: value.previewSelector,
-    onNormalized: value.onNormalized,
+    onnormalised: value.onnormalised,
     blocklist: { ...DEFAULT_BLOCKLIST, ...(value.blocklist || {}) },
     fixDomains: { ...DEFAULT_FIX_DOMAINS, ...(value.fixDomains || {}) },
     fixTlds: { ...DEFAULT_FIX_TLDS, ...(value.fixTlds || {}) },
@@ -105,7 +105,7 @@ function resolve(
  * Set the email preview element's content and validity state.
  *
  * @param {HTMLElement | null | undefined} target The element to update
- * @param {string | null} email The normalized email address
+ * @param {string | null} email The normalised email address
  * @param {boolean} valid Whether the email is valid
  * @returns {void}
  */
@@ -127,9 +127,9 @@ function setPreview(
  *
  * Usage:
  * <input v-email="{ autoFormat: true, previewSelector: '#emailPreview' }" />
- * <input v-email="{ onNormalized: (result) => console.log(result) }" />
+ * <input v-email="{ onnormalised: (result) => console.log(result) }" />
  *
- * The directive emits a 'directive:email:normalized' event when email normalization is complete.
+ * The directive emits a 'directive:email:normalised' event when email normalization is complete.
  *
  * @param {HTMLInputElement} el The element the directive is bound to
  * @param {DirectiveBinding<EmailOpts>} binding The directive binding
@@ -158,9 +158,9 @@ export default {
       }
 
       input.dispatchEvent(
-        new CustomEvent('directive:email:normalized', { detail: r })
+        new CustomEvent('directive:email:normalised', { detail: r })
       )
-      opts.onNormalized?.(r)
+      opts.onnormalised?.(r)
 
       return r
     }

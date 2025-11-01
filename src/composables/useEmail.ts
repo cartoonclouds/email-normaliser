@@ -14,11 +14,11 @@ import type { EmailNormResult, UseEmailOptions } from '../utils/email/types'
  * @param {UseEmailOptions} opts - Configuration options
  * @returns {object} Email composable interface
  * @returns {Ref<string>} returns.value - Reactive email input value
- * @returns {ComputedRef<string | null>} returns.email - Normalized email address
+ * @returns {ComputedRef<string | null>} returns.email - normalised email address
  * @returns {ComputedRef<boolean>} returns.valid - Whether the email is valid
  * @returns {ComputedRef<string[]>} returns.changes - List of changes made during normalization
  * @returns {ComputedRef<EmailNormResult>} returns.result - Full normalization result
- * @returns {Function} returns.apply - Apply normalized email to the input value
+ * @returns {Function} returns.apply - Apply normalised email to the input value
  * @returns {Function} returns.validate - Manually trigger validation
  */
 export function useEmail(initial = '', opts: UseEmailOptions = {}) {
@@ -36,8 +36,8 @@ export function useEmail(initial = '', opts: UseEmailOptions = {}) {
   const changes = computed(() => result.value.changes)
 
   /**
-   * Apply the normalized email to the input value.
-   * Updates the input value with the normalized email if they differ.
+   * Apply the normalised email to the input value.
+   * Updates the input value with the normalised email if they differ.
    */
   function apply() {
     if (email.value && value.value !== email.value) {

@@ -165,14 +165,15 @@ When adding new functionality:
 
 ### Test Distribution & Key Areas
 
-- **Email Directive**: lifecycle, DOM interactions, SSR-ish jsdom
-- **Email Normalization**: all transformation rules, ASCII conversion, edge cases
-- **Email Validation**: all rules, custom options, blocklist behavior
-- **Composable**: reactivity & integration
-- **Fuzzy Domain Matching** *(merged from Recent Features)*:
+- **Email Directive**: 44 tests covering lifecycle, DOM interactions, SSR-ish jsdom
+- **Email Normalization**: 100 tests for all transformation rules, ASCII conversion, edge cases  
+- **Email Validation**: 110 tests for all rules, custom options, blocklist behavior
+- **Composable**: 34 tests for reactivity & integration
+- **Fuzzy Domain Matching**: 52 tests covering:
   - `levenshtein()` algorithm suite: exact/empty, insert/delete/substitute, early-exit, char-code paths
   - `findClosestDomain()` suite: exact matches, fuzzy typo correction, custom candidates/thresholds, normalization, large sets, Unicode
-- **AI Suggestions**: suggestion logic & error handling
+- **AI Suggestions**: 48 tests including suggestion logic, error handling, and advanced TypeScript mocking strategies
+- **AI Integration**: 3 tests for end-to-end AI normalization workflows
 
 #### Running Tests
 
@@ -180,8 +181,31 @@ When adding new functionality:
 npm test
 npm run test:watch
 npx vitest run test/fuzzyDomainMatching.spec.ts
+npx vitest run test/aiSuggestEmail.spec.ts  # AI-specific tests with mock strategies
 npx vitest run --coverage
 ```
+
+### TypeScript Testing Strategies
+
+#### Complex Interface Mocking
+
+For third-party libraries with complex interfaces (like `@xenova/transformers`), we use simplified mocking strategies:
+
+```typescript
+// Instead of implementing full interfaces
+const mockExtractor = vi.fn() as any
+
+// This provides test efficiency while maintaining test reliability
+// Full type safety is preserved in production code
+```
+
+#### AI Model Testing
+
+The `aiSuggestEmail.spec.ts` file demonstrates advanced patterns for testing ML/AI integrations:
+
+- **Simplified Mocks**: Using `vi.fn() as any` for complex pipeline interfaces
+- **Embedding Testing**: Mock vector operations without full transformer implementation  
+- **Confidence Testing**: Validate AI confidence thresholds and similarity calculations
 
 ## Building
 
@@ -350,10 +374,19 @@ npx tsc --noEmit
 npm run build
 ```
 
+**TypeScript interface mocking issues**
+For complex third-party interfaces, use simplified mocking:
+```typescript
+// Instead of full interface implementation
+const mockPipeline = vi.fn() as any
+// Provides test efficiency while maintaining reliability
+```
+
 **Tests**
 ```bash
 npx vitest run --reporter=verbose
 npx vitest run test/specific-test.spec.ts
+npx vitest run test/aiSuggestEmail.spec.ts  # AI testing with simplified mocks
 ```
 
 ### Performance Notes
