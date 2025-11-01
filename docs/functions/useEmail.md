@@ -36,8 +36,8 @@ Email composable interface
 
 > **apply**: () => `void`
 
-Apply the normalized email to the input value.
-Updates the input value with the normalized email if they differ.
+Apply the normalised email to the input value.
+Updates the input value with the normalised email if they differ.
 
 #### Returns
 

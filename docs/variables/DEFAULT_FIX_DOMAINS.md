@@ -19,7 +19,7 @@ like Gmail, Hotmail, Outlook, Yahoo, iCloud, and others.
 ```typescript
 // "gamil.com" will be corrected to "gmail.com"
 // "hotmial.com" will be corrected to "hotmail.com"
-normaliseEmail('user@gamil.com') // Returns email normalized to 'user@gmail.com'
+normaliseEmail('user@gamil.com') // Returns email normalised to 'user@gmail.com'
 ```
 
 Categories included:

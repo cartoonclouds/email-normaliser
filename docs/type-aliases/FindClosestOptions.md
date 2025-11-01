@@ -16,7 +16,7 @@ Options for fuzzy domain matching.
 const options: FindClosestOptions = {
   candidates: ['gmail.com', 'googlemail.com'],
   maxDistance: 2,
-  normalize: true
+  normalise: true
 }
 
 const result = findClosestDomain('gmai.com', options);
@@ -47,10 +47,10 @@ A common heuristic is `Math.ceil(max(input.length, candidate.length) * 0.25)`
 
 ***
 
-### normalize?
+### normalise?
 
-> `optional` **normalize**: `boolean`
+> `optional` **normalise**: `boolean`
 
 Defined in: [utils/email/types.ts:431](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L431)
 
-Pre-normalize (lowercase/trim) both input and candidates. Default true.
+Pre-normalise (lowercase/trim) both input and candidates. Default true.

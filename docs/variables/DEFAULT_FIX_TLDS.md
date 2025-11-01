@@ -19,7 +19,7 @@ where users have mistyped the domain extension.
 ```typescript
 // ".con" will be corrected to ".com"
 // ".co,uk" will be corrected to ".co.uk"
-normaliseEmail('user@example.con') // Returns email normalized to 'user@example.com'
+normaliseEmail('user@example.con') // Returns email normalised to 'user@example.com'
 ```
 
 Categories included:

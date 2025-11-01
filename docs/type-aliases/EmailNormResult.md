@@ -48,7 +48,7 @@ Human-readable descriptions of all changes made during normalization
 
 Defined in: [utils/email/types.ts:250](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L250)
 
-The normalized email address, or null if normalization failed
+The normalised email address, or null if normalization failed
 
 ***
 
@@ -58,4 +58,4 @@ The normalized email address, or null if normalization failed
 
 Defined in: [utils/email/types.ts:252](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L252)
 
-Whether the final normalized email passes validation
+Whether the final normalised email passes validation

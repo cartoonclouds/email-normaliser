@@ -17,7 +17,7 @@ const result: ClosestDomainResult = {
   input: 'gmai.com',
   candidate: 'gmail.com',
   distance: 1,
-  normalizedScore: 0.89,
+  normalisedScore: 0.89,
   index: 0
 }
 ```
@@ -64,10 +64,10 @@ The input domain that was matched against
 
 ***
 
-### normalizedScore
+### normalisedScore
 
-> **normalizedScore**: `number`
+> **normalisedScore**: `number`
 
 Defined in: [utils/email/types.ts:399](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L399)
 
-Normalized similarity score (0-1, where 1 = exact match)
+normalised similarity score (0-1, where 1 = exact match)

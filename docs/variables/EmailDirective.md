@@ -12,9 +12,9 @@ Vue directive for normalizing and validating email inputs.
 
 Usage:
 <input v-email="{ autoFormat: true, previewSelector: '#emailPreview' }" />
-<input v-email="{ onNormalized: (result) => console.log(result) }" />
+<input v-email="{ onnormalised: (result) => console.log(result) }" />
 
-The directive emits a 'directive:email:normalized' event when email normalization is complete.
+The directive emits a 'directive:email:normalised' event when email normalization is complete.
 
 ## Type Declaration
 

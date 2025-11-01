@@ -53,13 +53,15 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "docs": "typedoc"
+    "docs": "typedoc",
+    "download:model:feature-extraction": "node ./scripts/download-feature-extraction.mjs"
   },
   "peerDependencies": {
     "vue": "3.5.*"
   },
   "dependencies": {
-    "@xenova/transformers": "^2.17.2"
+    "@xenova/transformers": "^2.17.2",
+    "@huggingface/transformers": "^3.7.6"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.0.3",

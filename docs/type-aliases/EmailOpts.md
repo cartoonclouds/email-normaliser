@@ -12,7 +12,7 @@ Email directive configurations
 
 Usage:
 <input v-email="{ autoFormat: true, previewSelector: '#emailPreview' }" />
-<input v-email="{ onNormalized: (result) => console.log(result) }" />
+<input v-email="{ onnormalised: (result) => console.log(result) }" />
 
 ## Type Declaration
 
@@ -48,11 +48,11 @@ Auto format events to listen to.
 
 > `optional` **onInput**: `boolean`
 
-### onNormalized()?
+### onnormalised()?
 
-> `optional` **onNormalized**: (`r`) => `void`
+> `optional` **onnormalised**: (`r`) => `void`
 
-Callback function called when the email is normalized
+Callback function called when the email is normalised
 
 #### Parameters
 
@@ -72,4 +72,4 @@ void
 
 > `optional` **previewSelector**: `string`
 
-CSS selector for an element to preview the normalized email and its validity
+CSS selector for an element to preview the normalised email and its validity

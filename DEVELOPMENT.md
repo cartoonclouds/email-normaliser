@@ -217,7 +217,7 @@ export function levenshtein(a: string, b: string, maxDistance?: number): number
 export interface FindClosestOptions {
   candidates?: readonly string[]
   maxDistance?: number
-  normalize?: boolean
+  normalise?: boolean
 }
 export interface ClosestDomainResult {
   input: string
@@ -247,7 +247,7 @@ Document public APIs with examples:
 
 ```ts
 /**
- * Normalize and validate an email address.
+ * normalise and validate an email address.
  * @example
  * const r = normaliseEmail('user@gamil.com')
  * r.email  // 'user@gmail.com'
@@ -273,7 +273,7 @@ Document public APIs with examples:
 ### Fuzzy Domain Matching *(merged from Recent Features)*
 
 - Algorithms live in `src/utils/email/fuzzyDomainMatching.ts`
-- Extend `DEFAULT_CANDIDATES` in `constants.ts` if adding built-in domains
+- Extend `DEFAULT_AI_EMBEDDING_CANDIDATES` in `constants.ts` if adding built-in domains
 - Keep `FindClosestOptions` conservative; ship safe defaults
 - Ensure early-exit/threshold changes include perf tests
 - Maintain 100% statement/line/function coverage for this module
