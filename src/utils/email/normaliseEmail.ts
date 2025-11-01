@@ -3,7 +3,7 @@ import {
   DEFAULT_FIX_DOMAINS,
   DEFAULT_FIX_TLDS,
 } from './constants'
-import { blocklisted, looksLikeEmail } from './validateEmail'
+import { blocklisted, isEmpty, looksLikeEmail } from './validateEmail'
 
 // --- types and constants ------------------------------------------
 
@@ -546,7 +546,7 @@ export function normaliseEmail(
 
   const asciiOnly = opts.asciiOnly ?? true
 
-  if (s === '') {
+  if (isEmpty(s)) {
     return {
       email: s,
       valid: false,
