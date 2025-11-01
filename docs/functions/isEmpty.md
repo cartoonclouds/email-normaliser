@@ -6,7 +6,7 @@
 
 > **isEmpty**(`raw`): `boolean`
 
-Defined in: [utils/email/validateEmail.ts:186](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L186)
+Defined in: [utils/email/validateEmail.ts:193](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L193)
 
 Check if a string is empty.
 

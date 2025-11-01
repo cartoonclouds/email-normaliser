@@ -6,7 +6,7 @@
 
 > **validationCodeToReason**(`code`): `string` \| `null`
 
-Defined in: [utils/email/validateEmail.ts:148](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L148)
+Defined in: [utils/email/validateEmail.ts:155](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L155)
 
 Convert a validation code to a human-readable reason.
 

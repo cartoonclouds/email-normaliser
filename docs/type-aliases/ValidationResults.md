@@ -6,7 +6,7 @@
 
 > **ValidationResults** = [`ValidationResult`](ValidationResult.md)[]
 
-Defined in: [utils/email/validateEmail.ts:90](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L90)
+Defined in: [utils/email/validateEmail.ts:97](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L97)
 
 Array of validation results from all validation checks performed on an email address.
 

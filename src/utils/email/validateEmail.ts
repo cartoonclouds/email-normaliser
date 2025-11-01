@@ -42,6 +42,13 @@ export const EmailValidationCodes = Object.freeze({
  *
  * This is a union type of all possible validation code values that can be returned
  * during email validation.
+ *
+ * @example
+ * ```ts
+ * function isFormatError(code: EmailValidationCode) {
+ *   return code === EmailValidationCodes.INVALID_FORMAT;
+ * }
+ * ```
  */
 export type EmailValidationCode =
   (typeof EmailValidationCodes)[keyof typeof EmailValidationCodes]

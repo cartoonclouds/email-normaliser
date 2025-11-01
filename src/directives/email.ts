@@ -69,7 +69,7 @@ type ResolvedOpts = {
 /**
  * Resolve the email directive options and preview element.
  *
- * @param {DirectiveBinding<EmailOpts>} binding The directive binding
+ * @param {{value?: EmailOpts}} binding The directive binding
  * @param {ElWithState} el The element the directive is bound to
  * @returns {ResolvedOpts} The resolved options and preview element
  */

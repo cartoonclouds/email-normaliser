@@ -6,7 +6,7 @@
 
 > **ValidationResult** = `object`
 
-Defined in: [utils/email/validateEmail.ts:64](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L64)
+Defined in: [utils/email/validateEmail.ts:71](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L71)
 
 Individual validation result for a specific validation check.
 
@@ -29,7 +29,7 @@ const result: ValidationResult = {
 
 > **isValid**: `boolean`
 
-Defined in: [utils/email/validateEmail.ts:66](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L66)
+Defined in: [utils/email/validateEmail.ts:73](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L73)
 
 Whether this specific validation check passed
 
@@ -39,7 +39,7 @@ Whether this specific validation check passed
 
 > **validationCode**: [`EmailValidationCode`](EmailValidationCode.md)
 
-Defined in: [utils/email/validateEmail.ts:68](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L68)
+Defined in: [utils/email/validateEmail.ts:75](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L75)
 
 The specific validation code that was triggered
 
@@ -49,6 +49,6 @@ The specific validation code that was triggered
 
 > **validationMessage**: `string`
 
-Defined in: [utils/email/validateEmail.ts:70](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L70)
+Defined in: [utils/email/validateEmail.ts:77](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L77)
 
 Human-readable explanation of the validation result

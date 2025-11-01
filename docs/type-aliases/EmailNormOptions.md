@@ -6,25 +6,25 @@
 
 > **EmailNormOptions** = `object`
 
-Defined in: [utils/email/normaliseEmail.ts:157](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L157)
+Defined in: [utils/email/normaliseEmail.ts:168](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L168)
 
-Configuration options for email normalization behavior.
+Options that influence normalisation behaviour.
 
-Allows customization of the normalization process by providing custom
-domain corrections, TLD corrections, and blocklist rules that will be
-merged with the default configurations.
+All maps are merged with sensible defaults (see constants). Set `ascii.only`
+to `false` to accept internationalised mail addresses (IDN/UTF-8 local-parts).
 
 ## Example
 
-```typescript
-const options: EmailNormOptions = {
-  fixDomains: { 'mytypo.com': 'correct.com' },
-  fixTlds: { '.typo': '.com' },
-  blocklist: {
-    block: { exact: ['unwanted.domain'] }
-  },
-  asciiOnly: true
-}
+```ts
+const opts: EmailNormOptions = {
+  blocklist: { block: { wildcard: ['*.throwaway.*'] } },
+  fixDomains: { 'gmai.com': 'gmail.com' },
+  fixTlds: { '.con': '.com' },
+  ascii: { only: true, transliterate: true }
+};
+
+const r = normaliseEmail('José@exämple.con', opts);
+// → "jose@example.com"
 ```
 
 ## Properties
@@ -33,7 +33,7 @@ const options: EmailNormOptions = {
 
 > `optional` **asciiOnly**: `boolean`
 
-Defined in: [utils/email/normaliseEmail.ts:185](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L185)
+Defined in: [utils/email/normaliseEmail.ts:196](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L196)
 
 Whether to allow only ASCII characters in email addresses.
 
@@ -53,7 +53,7 @@ true
 
 > `optional` **blocklist**: [`EmailBlockConfig`](EmailBlockConfig.md)
 
-Defined in: [utils/email/normaliseEmail.ts:163](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L163)
+Defined in: [utils/email/normaliseEmail.ts:174](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L174)
 
 Blocklist configuration for email validation (merges with default).
 
@@ -69,7 +69,7 @@ DEFAULT_BLOCKLIST
 
 > `optional` **fixDomains**: `Record`\<`string`, `string`\>
 
-Defined in: [utils/email/normaliseEmail.ts:169](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L169)
+Defined in: [utils/email/normaliseEmail.ts:180](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L180)
 
 Fix common domain typos (merges with default).
 
@@ -85,7 +85,7 @@ DEFAULT_FIX_DOMAINS
 
 > `optional` **fixTlds**: `Record`\<`string`, `string`\>
 
-Defined in: [utils/email/normaliseEmail.ts:175](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L175)
+Defined in: [utils/email/normaliseEmail.ts:186](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L186)
 
 Fix common TLD typos (merges with default).
 

@@ -8,21 +8,21 @@
 
 Defined in: [utils/email/normaliseEmail.ts:27](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L27)
 
-Result object returned by the email normalization process.
+Result of a full email normalisation pass.
 
-Contains the normalized email address, validation status, and detailed
-information about all transformations that were applied during processing.
+Contains the final (possibly corrected) email, whether it’s now valid,
+and both human- and machine-readable change trails.
 
 ## Example
 
-```typescript
-const result = normaliseEmail('User@GMAIL.CO')
-// result = {
-//   email: 'User@gmail.com',
-//   valid: true,
-//   changes: ['Corrected common domain or TLD typos', 'Lowercased domain part'],
-//   changeCodes: ['fixed_domain_and_tld_typos', 'lowercased_domain']
-// }
+```ts
+const { email, valid, changes, changeCodes }: EmailNormResult =
+  normaliseEmail(' JANE.DOÉ @ gmai .com  ');
+
+// email       → "jane.doe@gmail.com"
+// valid       → true
+// changes     → ["trimmed whitespace", "lowercased", "fixed common domain typo: gmai → gmail", "removed non-ASCII: É → E"]
+// changeCodes → ["TRIM", "LOWERCASE", "FIX_DOMAIN_TYPO", "NON_ASCII_REMOVED"]
 ```
 
 ## Properties

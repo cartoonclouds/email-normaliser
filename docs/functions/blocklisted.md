@@ -6,7 +6,7 @@
 
 > **blocklisted**(`email`, `cfg`): `boolean`
 
-Defined in: [utils/email/validateEmail.ts:200](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L200)
+Defined in: [utils/email/validateEmail.ts:207](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L207)
 
 Check if email domain is blocklisted.
 

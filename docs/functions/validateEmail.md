@@ -6,7 +6,7 @@
 
 > **validateEmail**(`email`, `options`): [`ValidationResults`](../type-aliases/ValidationResults.md)
 
-Defined in: [utils/email/validateEmail.ts:427](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L427)
+Defined in: [utils/email/validateEmail.ts:434](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L434)
 
 Validate an email address and return validation results.
 

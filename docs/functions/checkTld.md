@@ -6,7 +6,7 @@
 
 > **checkTld**(`email`, `tlds`): `boolean`
 
-Defined in: [utils/email/validateEmail.ts:368](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L368)
+Defined in: [utils/email/validateEmail.ts:375](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L375)
 
 Check if email TLD matches any in the provided TLDs list.
 

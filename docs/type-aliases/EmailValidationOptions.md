@@ -6,7 +6,7 @@
 
 > **EmailValidationOptions** = `object`
 
-Defined in: [utils/email/validateEmail.ts:110](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L110)
+Defined in: [utils/email/validateEmail.ts:117](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L117)
 
 Configuration options for email validation.
 
@@ -32,7 +32,7 @@ const options: EmailValidationOptions = {
 
 > `optional` **asciiOnly**: `boolean`
 
-Defined in: [utils/email/validateEmail.ts:137](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L137)
+Defined in: [utils/email/validateEmail.ts:144](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L144)
 
 Whether to allow only ASCII characters in email addresses.
 
@@ -51,7 +51,7 @@ true
 
 > `optional` **blocklist**: [`EmailBlockConfig`](EmailBlockConfig.md)
 
-Defined in: [utils/email/validateEmail.ts:116](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L116)
+Defined in: [utils/email/validateEmail.ts:123](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L123)
 
 Blocklist configuration for email validation.
 
@@ -67,7 +67,7 @@ DEFAULT_BLOCKLIST
 
 > `optional` **fixDomains**: `Record`\<`string`, `string`\>
 
-Defined in: [utils/email/validateEmail.ts:122](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L122)
+Defined in: [utils/email/validateEmail.ts:129](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L129)
 
 Fix common domain typos configuration.
 
@@ -83,7 +83,7 @@ DEFAULT_FIX_DOMAINS
 
 > `optional` **fixTlds**: `Record`\<`string`, `string`\>
 
-Defined in: [utils/email/validateEmail.ts:128](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L128)
+Defined in: [utils/email/validateEmail.ts:135](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L135)
 
 Fix common TLD typos configuration.
 

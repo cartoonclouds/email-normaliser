@@ -6,28 +6,31 @@
 
 > **EmailBlockConfig** = `object`
 
-Defined in: [utils/email/normaliseEmail.ts:106](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L106)
+Defined in: [utils/email/normaliseEmail.ts:117](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L117)
 
-Configuration object for email domain and pattern blocking.
+Block/allow configuration for domains and TLDs.
 
-Defines rules for blocking unwanted email addresses using various matching
-strategies including exact matches, suffix patterns, wildcard patterns, and
-TLD-based blocking. Also supports allowlist overrides.
+You can combine exact, suffix, wildcard and TLD rules, and then punch holes
+via `allow.exact`. Values are compared case-insensitively.
 
-## Example
+## Examples
 
-```typescript
-const blockConfig: EmailBlockConfig = {
+```ts
+const cfg: EmailBlockConfig = {
   block: {
-    exact: ['spam.com', 'fake.domain'],
-    suffix: ['.temp', '.test'],
-    wildcard: ['*.mailinator.*', '*.throwaway.*'],
-    tlds: ['.invalid', '.test']
+    exact: ['example.com', 'test.local'],
+    suffix: ['.invalid', '.local'],
+    wildcard: ['*.mailinator.com', '*.disposable.*'],
+    tlds: ['.zip', '.example']
   },
-  allow: {
-    exact: ['important.test'] // Override block rules for specific domains
-  }
-}
+  allow: { exact: ['my-team.example.com'] }
+};
+```
+
+```ts
+// Checking a domain against the config:
+isBlocked('user@mailinator.com', cfg)  // → true (wildcard)
+isBlocked('boss@my-team.example.com', cfg) // → false (allow.exact)
 ```
 
 ## Properties
@@ -36,7 +39,7 @@ const blockConfig: EmailBlockConfig = {
 
 > `optional` **allow**: `object`
 
-Defined in: [utils/email/normaliseEmail.ts:132](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L132)
+Defined in: [utils/email/normaliseEmail.ts:143](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L143)
 
 Allowlist configuration that overrides block rules for specific domains
 
@@ -52,7 +55,7 @@ Exact domain matches that should be allowed despite being in block rules
 
 > `optional` **block**: `object`
 
-Defined in: [utils/email/normaliseEmail.ts:107](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L107)
+Defined in: [utils/email/normaliseEmail.ts:118](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L118)
 
 #### exact?
 

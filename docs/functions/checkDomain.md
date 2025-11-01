@@ -6,7 +6,7 @@
 
 > **checkDomain**(`email`, `domains`): `boolean`
 
-Defined in: [utils/email/validateEmail.ts:342](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L342)
+Defined in: [utils/email/validateEmail.ts:349](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L349)
 
 Check if email domain matches any in the provided domains map.
 
