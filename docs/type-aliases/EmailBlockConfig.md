@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **EmailBlockConfig** = `object`
 
-Defined in: [utils/email/normaliseEmail.ts:117](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L117)
+Defined in: [utils/email/types.ts:106](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L106)
 
 Block/allow configuration for domains and TLDs.
 
@@ -39,15 +39,15 @@ isBlocked('boss@my-team.example.com', cfg) // → false (allow.exact)
 
 > `optional` **allow**: `object`
 
-Defined in: [utils/email/normaliseEmail.ts:143](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L143)
-
-Allowlist configuration that overrides block rules for specific domains
+Defined in: [utils/email/types.ts:132](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L132)
 
 #### exact?
 
 > `optional` **exact**: `string`[]
 
-Exact domain matches that should be allowed despite being in block rules
+Exact match patterns that override the block list.
+
+E.g. if you block "*.example.com" but want to allow "company.example.com"
 
 ***
 
@@ -55,7 +55,7 @@ Exact domain matches that should be allowed despite being in block rules
 
 > `optional` **block**: `object`
 
-Defined in: [utils/email/normaliseEmail.ts:118](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L118)
+Defined in: [utils/email/types.ts:107](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L107)
 
 #### exact?
 
@@ -69,20 +69,21 @@ Exact match patterns.
 
 Suffix match patterns.
 
-E.g. ".example" matches "user@example", "
+E.g. ".example" matches "user@example", "user@sub.example", etc.
 
 #### tlds?
 
 > `optional` **tlds**: `string`[]
 
-Top-level domains to block.
+TLD-only match patterns.
 
-E.g. ".test", ".invalid"
+E.g. ".zip", ".example" to block those TLDs.
 
 #### wildcard?
 
 > `optional` **wildcard**: `string`[]
 
-Wildcard match patterns.
+Wildcard patterns (*, ** supported).
 
-E.g. "*.mailinator.com" matches "abc.mailinator.com", "xyz.mailinator.com.au", etc.
+E.g. "*.mailinator.com" matches "user@123.mailinator.com"
+E.g. "*.disposable.*" matches "user@temp.disposable.email"

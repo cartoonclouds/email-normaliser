@@ -1,4 +1,4 @@
-import type { EmailBlockConfig } from './normaliseEmail'
+import type { EmailBlockConfig } from './types'
 
 /**
  * Default domain correction mappings for common email provider typos and variations.
@@ -248,3 +248,162 @@ export const DEFAULT_BLOCKLIST: EmailBlockConfig = {
   },
   allow: { exact: [] },
 }
+
+// --- Email Validation Codes -----------------------------------------------
+
+/**
+ * Enumeration of all possible email validation result codes.
+ *
+ * These codes represent the different validation states an email address
+ * can have during the validation process. Each code corresponds to a
+ * specific validation check.
+ *
+ * @example
+ * ```typescript
+ * const results = validateEmail('user@invalid-domain')
+ * // results[0].validationCode might be EmailValidationCodes.INVALID_DOMAIN
+ * ```
+ */
+export const EmailValidationCodes = Object.freeze({
+  /** Email address passed all validation checks */
+  VALID: 'VALID',
+  /** Email input was empty or only whitespace */
+  EMPTY: 'EMPTY',
+  /** Email format does not match valid email structure */
+  INVALID_FORMAT: 'INVALID_FORMAT',
+  /** Email domain is in the configured blocklist */
+  BLOCKLISTED: 'BLOCKLISTED',
+  /** Email domain matches a known typo in the corrections list */
+  INVALID_DOMAIN: 'INVALID_DOMAIN',
+  /** Email TLD matches a known typo in the corrections list */
+  INVALID_TLD: 'INVALID_TLD',
+  /** Email contains non-ASCII characters when ASCII-only mode is enabled */
+  NON_ASCII_CHARACTERS: 'NON_ASCII_CHARACTERS',
+  /** Email domain has a suggested correction based on fuzzy matching */
+  DOMAIN_SUGGESTION: 'DOMAIN_SUGGESTION',
+} as const)
+
+/**
+ * Type representing any valid email validation code from the EmailValidationCodes enumeration.
+ *
+ * This is a union type of all possible validation code values that can be returned
+ * during email validation.
+ *
+ * @example
+ * ```ts
+ * function isFormatError(code: EmailValidationCode) {
+ *   return code === EmailValidationCodes.INVALID_FORMAT;
+ * }
+ * ```
+ */
+export type EmailValidationCode =
+  (typeof EmailValidationCodes)[keyof typeof EmailValidationCodes]
+
+// --- Email Change Codes ---------------------------------------------------
+
+/**
+ * Enumeration of all possible email normalization change codes.
+ *
+ * These machine-readable codes represent specific transformations that can be
+ * applied during the email normalization process. Each code corresponds to a
+ * specific step in the normalization pipeline.
+ *
+ * @example
+ * ```typescript
+ * const result = normaliseEmail('User (comment) at gmail dot com')
+ * // result.changeCodes might include:
+ * // ['stripped_display_name_and_comments', 'deobfuscated_at_and_dot', 'lowercased_domain']
+ * ```
+ */
+export const EmailChangeCodes = Object.freeze({
+  /** Email input was empty or only whitespace */
+  EMPTY: 'empty',
+  /** Email was blocked by the configured blocklist */
+  BLOCKED_BY_LIST: 'blocked_by_list',
+  /** Replaced obfuscated "at" and "dot" text with @ and . symbols */
+  DEOBFUSCATED_AT_AND_DOT: 'deobfuscated_at_and_dot',
+  /** Applied domain and TLD typo corrections from the fix mappings */
+  FIXED_DOMAIN_AND_TLD_TYPOS: 'fixed_domain_and_tld_typos',
+  /** Applied fuzzy domain matching to correct likely domain typos */
+  FUZZY_DOMAIN_CORRECTION: 'fuzzy_domain_correction',
+  /** Email format was invalid and could not be normalized */
+  INVALID_EMAIL_SHAPE: 'invalid_email_shape',
+  /** Converted domain part to lowercase */
+  LOWERCASED_DOMAIN: 'lowercased_domain',
+  /** Converted Unicode symbols (＠, ．, 。) to ASCII equivalents */
+  NORMALIZED_UNICODE_SYMBOLS: 'normalized_unicode_symbols',
+  /** Removed display names, comments, or angle bracket formatting */
+  STRIPPED_DISPLAY_NAME_AND_COMMENTS: 'stripped_display_name_and_comments',
+  /** Cleaned up spacing, punctuation, and formatting issues */
+  TIDIED_PUNCTUATION_AND_SPACING: 'tidied_punctuation_and_spacing',
+  /** Converted non-ASCII characters to ASCII equivalents or removed them */
+  CONVERTED_TO_ASCII: 'converted_to_ascii',
+} as const)
+
+/**
+ * Machine-readable code for a single normalization change.
+ *
+ * This is the union of the values from `EmailChangeCodes`. Use it to build
+ * analytics, filtering, or to toggle UI badges without stringly-typed checks.
+ *
+ * @example
+ * ```ts
+ * function hasAsciiFix(r: EmailNormResult) {
+ *   return r.changeCodes.includes(EmailChangeCodes.CONVERTED_TO_ASCII as EmailChangeCode);
+ * }
+ * ```
+ */
+export type EmailChangeCode =
+  (typeof EmailChangeCodes)[keyof typeof EmailChangeCodes]
+
+/**
+ * Default list of popular email domains used for fuzzy domain matching.
+ *
+ * This readonly array contains a curated list of common email service provider
+ * domains. It is used as the default candidate list for fuzzy matching algorithms
+ * to suggest corrections for misspelled or mistyped email domains.
+ *
+ * @example
+ * ```typescript
+ * // "gmai.com" will be suggested as "gmail.com"
+ * const suggestion = findClosestDomain('gmai.com', DEFAULT_FUZZY_DOMAIN_CANDIDATES);
+ * console.log(suggestion); // { domain: 'gmail.com', distance: 1 }
+ * ```
+ */
+export const DEFAULT_FUZZY_DOMAIN_CANDIDATES = [
+  // Global majors
+  'gmail.com',
+  'outlook.com',
+  'hotmail.com',
+  'live.com',
+  'msn.com',
+
+  // Apple
+  'icloud.com',
+  'me.com',
+  'mac.com',
+
+  // Yahoo (global + UK)
+  'yahoo.com',
+  'yahoo.co.uk',
+
+  // Google legacy alias
+  'googlemail.com',
+
+  // Privacy & indie providers
+  'proton.me',
+  'fastmail.com',
+  'zoho.com',
+
+  // Popular UK ISPs (still seen in the wild)
+  'btinternet.co.uk',
+  'talktalk.net',
+  'talktalk.co.uk',
+  'sky.com',
+  'sky.co.uk',
+  'virginmedia.com',
+  'virginmedia.co.uk',
+  'blueyonder.co.uk',
+  'ntlworld.com',
+  'ntlworld.co.uk',
+] as const

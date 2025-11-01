@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **useEmail**(`initial`, `opts`): `object`
 
-Defined in: [composables/useEmail.ts:33](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/composables/useEmail.ts#L33)
+Defined in: [composables/useEmail.ts:28](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/composables/useEmail.ts#L28)
 
 Vue composable for email normalization and validation.
 

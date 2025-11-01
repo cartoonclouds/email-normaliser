@@ -1,5 +1,5 @@
 
-# @cartoonclouds/contact-normalisers
+# @cartoonclouds/email-normaliser
 
 A comprehensive email normalization and validation library with Vue 3 directives, composables, and AI-powered domain suggestions.
 
@@ -12,16 +12,64 @@ A comprehensive email normalization and validation library with Vue 3 directives
 🤖 **AI Domain Suggestions**: Machine learning-powered typo correction for email domains  
 ⚡ **Vue 3 Integration**: Ready-to-use composables and directives  
 🌳 **Tree Shakeable**: Import only what you need  
-📱 **TypeScript Support**: Full type safety with comprehensive JSDoc documentation  
+📱 **TypeScript Support**: Full type safety with centralized type definitions  
 🎯 **67+ Domain Corrections**: Built-in fixes for common email provider typos (extensible)  
 🌐 **51+ TLD Corrections**: Smart handling of TLD misspellings (extensible)  
 📚 **Comprehensive Documentation**: Detailed JSDoc for all types, functions, and constants  
-🧪 **181 Tests**: Thoroughly tested with comprehensive test suite including edge cases  
+🧪 **340+ Tests**: Thoroughly tested with comprehensive test suite including edge cases  
+🔧 **Fuzzy Domain Matching**: Intelligent domain correction using Levenshtein distance algorithms  
+🏗️ **Centralized Types**: All TypeScript types consolidated in a single, maintainable location  
 
 ## Installation
 
 ```bash
-npm install @cartoonclouds/contact-normalisers
+npm install @cartoonclouds/email-normaliser
+```
+
+## TypeScript Support
+
+This library provides comprehensive TypeScript support with all types centralized in a single location for easy importing and maintenance.
+
+### Importing Types
+
+All TypeScript types are available from the main package and the centralized types module:
+
+```typescript
+// Import types from the main package
+import type { 
+  EmailNormOptions, 
+  EmailNormResult, 
+  ValidationResult,
+  AiEmailOptions,
+  UseEmailOptions 
+} from '@cartoonclouds/email-normaliser'
+
+// Or import directly from the types module for better tree-shaking
+import type { 
+  EmailBlockConfig,
+  FindClosestOptions,
+  DomainCandidate 
+} from '@cartoonclouds/email-normaliser/utils/email/types'
+```
+
+### Common Type Patterns
+
+```typescript
+// Normalization configuration
+const normOptions: EmailNormOptions = {
+  asciiOnly: true,
+  blocklist: { block: { exact: ['spam.com'] } },
+  fuzzyMatching: { enabled: true, maxDistance: 2 }
+}
+
+// Validation result handling
+const handleValidation = (results: ValidationResult[]) => {
+  results.forEach(result => {
+    if (!result.isValid && result.suggestion) {
+      console.log(`Suggested: ${result.suggestion.suggestedDomain}`)
+    }
+  })
+}
 ```
 
 ## Quick Start
@@ -29,7 +77,7 @@ npm install @cartoonclouds/contact-normalisers
 ### Basic Email Normalization
 
 ```typescript
-import { normaliseEmail } from '@cartoonclouds/contact-normalisers'
+import { normaliseEmail } from '@cartoonclouds/email-normaliser'
 
 const result = normaliseEmail('user@gamil.com') // Fixes gamil.com → gmail.com
 console.log(result.email)                       // 'user@gmail.com'
@@ -40,7 +88,7 @@ console.log(result.changes)                     // ['Corrected common domain or 
 ### Advanced Configuration
 
 ```typescript
-import { normaliseEmail, validateEmail } from '@cartoonclouds/contact-normalisers'
+import { normaliseEmail, validateEmail } from '@cartoonclouds/email-normaliser'
 
 // Custom normalization options
 const result = normaliseEmail('üser@typo.co', {
@@ -65,7 +113,7 @@ const validation = validateEmail('user@example.com', {
 
 ```vue
 <script setup>
-import { useEmail } from '@cartoonclouds/contact-normalisers'
+import { useEmail } from '@cartoonclouds/email-normaliser'
 
 // Basic usage
 const { value, email, valid, changes, apply } = useEmail('', {
@@ -111,7 +159,7 @@ Register the directive globally in your Vue 3 application:
 ```typescript
 // main.ts or main.js
 import { createApp } from 'vue'
-import { EmailDirective } from '@cartoonclouds/contact-normalisers'
+import { EmailDirective } from '@cartoonclouds/email-normaliser'
 import App from './App.vue'
 
 const app = createApp(App)
@@ -143,7 +191,7 @@ Alternatively, import and use the directive in individual components:
 
 ```vue
 <script setup>
-import { EmailDirective } from '@cartoonclouds/contact-normalisers'
+import { EmailDirective } from '@cartoonclouds/email-normaliser'
 </script>
 
 <template>
@@ -167,29 +215,18 @@ import { EmailDirective } from '@cartoonclouds/contact-normalisers'
 Normalize and validate an email address with comprehensive error checking.
 
 ```typescript
-/**
- * Result object returned by the email normalization process.
- * Contains the normalized email address, validation status, and detailed
- * information about all transformations that were applied during processing.
- */
-interface EmailNormResult {
-  /** The normalized email address, or null if normalization failed */
-  email: string | null
-  /** Whether the final normalized email passes validation */
-  valid: boolean
-  /** Human-readable descriptions of all changes made during normalization */
-  changes: string[]
-  /** Machine-readable codes for all changes made during normalization */
-  changeCodes: EmailChangeCode[]
-}
+import type { EmailNormResult, EmailNormOptions } from '@cartoonclouds/email-normaliser'
 
-const result = normaliseEmail('User@GMAIL.CO', {
+// All types are fully documented in the centralized types module
+const options: EmailNormOptions = {
   fixDomains: { 'custom.typo': 'correct.domain' },
   fixTlds: { '.co': '.com' },
   blocklist: { 
     block: { exact: ['spam.com'] } 
   }
-})
+}
+
+const result: EmailNormResult = normaliseEmail('User@GMAIL.CO', options)
 
 // Example result:
 // {
@@ -214,32 +251,14 @@ const result = normaliseEmail('User@GMAIL.CO', {
 Validate an email address with customizable options and return detailed validation results.
 
 ```typescript
-/**
- * Configuration options for email validation
- */
-type EmailValidationOptions = {
-  blocklist?: EmailBlockConfig           // Custom blocklist (replaces default)
-  fixDomains?: Record<string, string>    // Custom domain corrections (merges with default)
-  fixTlds?: Record<string, string>       // Custom TLD corrections (merges with default)  
-  asciiOnly?: boolean                    // ASCII-only validation (default: true)
-}
+import type { 
+  EmailValidationOptions, 
+  ValidationResults 
+} from '@cartoonclouds/email-normaliser'
 
-/**
- * Array of validation results from all validation checks performed on an email address.
- * If the email is valid, contains a single ValidationResult with isValid: true.
- * If invalid, contains one or more ValidationResult objects describing each failure.
- */
-type ValidationResults = Array<{
-  /** Whether this specific validation check passed */
-  isValid: boolean
-  /** The specific validation code that was triggered */
-  validationCode: EmailValidationCode
-  /** Human-readable explanation of the validation result */
-  validationMessage: string
-}>
-
+// All types include comprehensive JSDoc documentation and examples
 // Basic validation
-const results = validateEmail('user@invalid-domain.test')
+const results: ValidationResults = validateEmail('user@invalid-domain.test')
 // Example result:
 // [{
 //   isValid: false, 
@@ -248,14 +267,15 @@ const results = validateEmail('user@invalid-domain.test')
 // }]
 
 // Advanced validation with custom options
-const customResults = validateEmail('üser@typo.co', {
+const options: EmailValidationOptions = {
   asciiOnly: true,                           // Reject non-ASCII characters
   fixDomains: { 'typo.co': 'example.com' },  // Custom domain corrections
   fixTlds: { '.co': '.com' },                // Custom TLD corrections
   blocklist: {                               // Custom blocklist
     block: { exact: ['spam.com'] }
   }
-})
+}
+const customResults: ValidationResults = validateEmail('üser@typo.co', options)
 // Returns: [
 //   { validationCode: 'INVALID_DOMAIN', ... },
 //   { validationCode: 'NON_ASCII_CHARACTERS', ... }
@@ -285,6 +305,66 @@ const suggestion = await aiSuggestEmailDomain('gmial.com', {
 console.log(suggestion)
 // { suggestion: 'gmail.com', confidence: 0.94, reason: 'embedding_similarity' }
 ```
+
+#### Fuzzy Domain Matching
+
+High-performance string similarity algorithms for intelligent domain correction.
+
+##### `levenshtein(a, b, maxDistance?)`
+
+Compute edit distance between two strings with optional early exit optimization.
+
+```typescript
+import { levenshtein } from '@cartoonclouds/email-normaliser/utils/email/fuzzyDomainMatching'
+
+console.log(levenshtein('gmai.com', 'gmail.com'))     // 1 (missing 'l')
+console.log(levenshtein('gmailcom', 'gmail.com'))     // 1 (missing '.')
+console.log(levenshtein('hotmial.com', 'hotmail.com')) // 2 (i↔a swap)
+
+// With early exit optimization for performance
+console.log(levenshtein('verydifferent', 'gmail.com', 3)) // > 3 (stops early)
+```
+
+##### `findClosestDomain(input, options?)`
+
+Find the closest domain from a list of candidates using fuzzy matching.
+
+```typescript
+import { findClosestDomain, DEFAULT_CANDIDATES } from '@cartoonclouds/email-normaliser/utils/email/fuzzyDomainMatching'
+
+// Basic usage with built-in 28+ domain candidates
+const result = findClosestDomain('gmai.com')
+console.log(result)
+// {
+//   input: 'gmai.com',
+//   candidate: 'gmail.com', 
+//   distance: 1,
+//   normalizedScore: 0.89,
+//   index: 0
+// }
+
+// Advanced usage with custom options
+const customResult = findClosestDomain('mytypo.co', {
+  candidates: ['mysite.com', 'example.com'],
+  maxDistance: 3,
+  normalize: true
+})
+
+// UK ISP domain correction
+const ukResult = findClosestDomain('virginmeda.co.uk')
+console.log(ukResult.candidate) // 'virginmedia.co.uk'
+```
+
+**Configuration Options:**
+- **`candidates`**: Custom domain list (extends built-in 28+ domains)
+- **`maxDistance`**: Maximum edit distance threshold (returns null if exceeded)
+- **`normalize`**: Automatic case and whitespace normalization (default: true)
+
+**Built-in Domain Candidates (28):**
+- **Major providers**: gmail.com, outlook.com, hotmail.com, yahoo.com, icloud.com
+- **Business domains**: live.com, msn.com, proton.me, fastmail.com, zoho.com
+- **UK ISPs**: virginmedia.co.uk, btinternet.co.uk, blueyonder.co.uk, talktalk.co.uk, sky.co.uk
+- **Development tools**: salesforce.com, atlassian.com, slack.com, github.com
 
 ### Vue Integration
 
@@ -380,7 +460,7 @@ The library includes comprehensive built-in correction lists for common email ty
  * to their correct counterparts. It includes typos for major email providers
  * like Gmail, Hotmail, Outlook, Yahoo, iCloud, and others.
  */
-import { DEFAULT_FIX_DOMAINS } from '@cartoonclouds/contact-normalisers'
+import { DEFAULT_FIX_DOMAINS } from '@cartoonclouds/email-normaliser'
 ```
 
 **Gmail variations (15):**
@@ -517,7 +597,7 @@ import { DEFAULT_FIX_DOMAINS } from '@cartoonclouds/contact-normalisers'
  * to their correct counterparts. It helps fix typos in email addresses
  * where users have mistyped the domain extension.
  */
-import { DEFAULT_FIX_TLDS } from '@cartoonclouds/contact-normalisers'
+import { DEFAULT_FIX_TLDS } from '@cartoonclouds/email-normaliser'
 ```
 
 **Common .com typos (16):**
@@ -625,7 +705,7 @@ import { DEFAULT_FIX_TLDS } from '@cartoonclouds/contact-normalisers'
  * including test domains, temporary email services, and example domains that should
  * not be used in production environments.
  */
-import { DEFAULT_BLOCKLIST } from '@cartoonclouds/contact-normalisers'
+import { DEFAULT_BLOCKLIST } from '@cartoonclouds/email-normaliser'
 
 {
   block: {
@@ -681,7 +761,7 @@ import { DEFAULT_BLOCKLIST } from '@cartoonclouds/contact-normalisers'
 Both `normaliseEmail` and `validateEmail` functions support comprehensive configuration options:
 
 ```typescript
-import { normaliseEmail, validateEmail, DEFAULT_FIX_DOMAINS, DEFAULT_FIX_TLDS } from '@cartoonclouds/contact-normalisers'
+import { normaliseEmail, validateEmail, DEFAULT_FIX_DOMAINS, DEFAULT_FIX_TLDS } from '@cartoonclouds/email-normaliser'
 
 const options = {
   // ASCII-only mode: convert/reject non-ASCII characters
@@ -756,20 +836,27 @@ Import only the functions you need to minimize bundle size:
 
 ```typescript
 // Individual function imports
-import { normaliseEmail } from '@cartoonclouds/contact-normalisers/utils/email/normaliseEmail'
-import { validateEmail } from '@cartoonclouds/contact-normalisers/utils/email/validateEmail'
-import { aiSuggestEmailDomain } from '@cartoonclouds/contact-normalisers/utils/email/aiSuggestEmail'
+import { normaliseEmail } from '@cartoonclouds/email-normaliser/utils/email/normaliseEmail'
+import { validateEmail } from '@cartoonclouds/email-normaliser/utils/email/validateEmail'
+import { aiSuggestEmailDomain } from '@cartoonclouds/email-normaliser/utils/email/aiSuggestEmail'
+
+// Fuzzy domain matching utilities
+import { 
+  levenshtein, 
+  findClosestDomain, 
+  DEFAULT_CANDIDATES 
+} from '@cartoonclouds/email-normaliser/utils/email/fuzzyDomainMatching'
 
 // Vue-specific imports
-import { useEmail } from '@cartoonclouds/contact-normalisers/composables/useEmail'
-import EmailDirective from '@cartoonclouds/contact-normalisers/directives/email'
+import { useEmail } from '@cartoonclouds/email-normaliser/composables/useEmail'
+import EmailDirective from '@cartoonclouds/email-normaliser/directives/email'
 
 // Constants only
 import { 
   DEFAULT_FIX_DOMAINS, 
   DEFAULT_FIX_TLDS, 
   DEFAULT_BLOCKLIST 
-} from '@cartoonclouds/contact-normalisers/utils/email/constants'
+} from '@cartoonclouds/email-normaliser/utils/email/constants'
 ```
 
 ## Common Use Cases
@@ -821,7 +908,7 @@ const validEmails = results
 <!-- With VeeValidate -->
 <script setup>
 import { useField } from 'vee-validate'
-import { useEmail } from '@cartoonclouds/contact-normalisers'
+import { useEmail } from '@cartoonclouds/email-normaliser'
 
 const { value, errorMessage } = useField('email', (value) => {
   const result = normaliseEmail(value)
@@ -836,6 +923,41 @@ const { email, apply } = useEmail(value)
   <button @click="apply">Fix Email</button>
   <span v-if="errorMessage">{{ errorMessage }}</span>
 </template>
+```
+
+## Architecture & Type System
+
+### Centralized Type Definitions
+
+This library uses a centralized type system where all TypeScript types are defined in a single location (`src/utils/email/types.ts`) for better maintainability and consistency. This provides several benefits:
+
+- **Single Source of Truth**: All types are defined once and imported where needed
+- **Better Maintainability**: Changes to types only need to be made in one place
+- **Consistent Documentation**: All types include comprehensive JSDoc with examples
+- **Improved Developer Experience**: Easier to find and understand all available types
+- **Better Tree Shaking**: Import only the types you need from the centralized module
+
+### Type Categories
+
+The type system is organized into logical categories:
+
+- **Validation Types**: `ValidationResult`, `ValidationResults`, `EmailValidationOptions`
+- **Normalization Types**: `EmailNormResult`, `EmailNormOptions`, `EmailBlockConfig`, `EmailFixResult`  
+- **Fuzzy Matching Types**: `DomainCandidate`, `ClosestDomainResult`, `FindClosestOptions`
+- **AI Types**: `AiEmailSuggestion`, `AiEmailOptions`
+- **Vue Composable Types**: `UseEmailOptions`
+
+### Import Patterns
+
+```typescript
+// Main package exports (recommended for most use cases)
+import type { EmailNormOptions, ValidationResults } from '@cartoonclouds/email-normaliser'
+
+// Direct type imports (for specialized use cases)
+import type { FindClosestOptions } from '@cartoonclouds/email-normaliser/utils/email/types'
+
+// Function imports remain unchanged
+import { normaliseEmail, validateEmail } from '@cartoonclouds/email-normaliser'
 ```
 
 ## Development
@@ -854,10 +976,14 @@ Contributions are welcome! Please read our contributing guidelines and submit pu
 
 ## Recent Updates
 
-**Latest Version** adds comprehensive configuration options:
-- 🌍 **ASCII-only mode** with automatic transliteration  
+**Latest Version** adds comprehensive configuration options, fuzzy matching, and improved type system:
+- �️ **Centralized Type System** - All TypeScript types consolidated in single maintainable location
+- �🌍 **ASCII-only mode** with automatic transliteration  
 - ⚙️ **Custom validation options** for domains, TLDs, and blocklists
+- 🔧 **Fuzzy domain matching** with Levenshtein distance algorithms
+- 📊 **100% code coverage** for fuzzy matching with 52 comprehensive tests
+- 📚 **Enhanced Type Documentation** - Comprehensive JSDoc with examples for all types
 - 🔄 **Full backward compatibility** - existing code unchanged
-- 🧪 **181 comprehensive tests** covering all functionality
+- 🧪 **340+ comprehensive tests** covering all functionality
 
 **Note**: The AI-powered domain suggestions require downloading transformer models (~23MB) on first use. This happens automatically in the browser or Node.js environment.

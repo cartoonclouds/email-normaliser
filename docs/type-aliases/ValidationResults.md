@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **ValidationResults** = [`ValidationResult`](ValidationResult.md)[]
 
-Defined in: [utils/email/validateEmail.ts:97](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L97)
+Defined in: [utils/email/types.ts:78](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L78)
 
 Array of validation results from all validation checks performed on an email address.
 

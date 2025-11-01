@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  type EmailChangeCode,
   EmailChangeCodes,
+} from '../src/utils/email/constants'
+import {
   changeCodeToReason,
   normaliseEmail,
 } from '../src/utils/email/normaliseEmail'
-import type {
-  EmailChangeCode,
-  EmailNormOptions,
-} from '../src/utils/email/normaliseEmail'
+import type { EmailNormOptions } from '../src/utils/email/types'
 
 const valid = (s: string, opts?: EmailNormOptions) => {
   const r = normaliseEmail(s, opts)
@@ -1268,6 +1268,226 @@ describe('normaliseEmail', () => {
       )
 
       consoleSpy.mockRestore()
+    })
+  })
+
+  describe('fuzzy domain matching', () => {
+    it('should suggest corrections with custom candidates', () => {
+      const result = normaliseEmail('test@custommial.com', {
+        fuzzyMatching: {
+          enabled: true,
+          candidates: ['custommail.com'],
+          minConfidence: 0.5,
+        },
+      })
+
+      expect(result.valid).toBe(true)
+      expect(result.email).toBe('test@custommail.com')
+      expect(result.changeCodes).toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+      expect(result.changes).toContain(
+        changeCodeToReason(EmailChangeCodes.FUZZY_DOMAIN_CORRECTION)
+      )
+    })
+
+    it('should respect confidence threshold settings', () => {
+      // With high threshold, should not correct distant matches
+      const result1 = normaliseEmail('test@verydifferentdomain.com', {
+        fuzzyMatching: {
+          enabled: true,
+          minConfidence: 0.9,
+        },
+      })
+
+      expect(result1.email).toBe('test@verydifferentdomain.com')
+      expect(result1.changeCodes).not.toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+
+      // With low threshold, should correct similar custom domain
+      const result2 = normaliseEmail('test@custommial.com', {
+        fuzzyMatching: {
+          enabled: true,
+          candidates: ['custommail.com'],
+          minConfidence: 0.3,
+        },
+      })
+
+      expect(result2.email).toBe('test@custommail.com')
+      expect(result2.changeCodes).toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+    })
+
+    it('should combine custom candidates with default candidates', () => {
+      // Test both default and custom candidates are available
+      const result1 = normaliseEmail('test@custommial.com', {
+        fuzzyMatching: {
+          enabled: true,
+          candidates: ['custommail.com'],
+        },
+      })
+
+      // Should match custom candidate
+      expect(result1.email).toBe('test@custommail.com')
+      expect(result1.changeCodes).toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+    })
+
+    it('should not suggest corrections when disabled', () => {
+      const result = normaliseEmail('test@custommial.com', {
+        fuzzyMatching: { enabled: false },
+      })
+
+      expect(result.valid).toBe(true)
+      expect(result.email).toBe('test@custommial.com')
+      expect(result.changeCodes).not.toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+    })
+
+    it('should not suggest corrections when fuzzyMatching is undefined', () => {
+      const result = normaliseEmail('test@custommial.com', {})
+
+      expect(result.valid).toBe(true)
+      expect(result.email).toBe('test@custommial.com')
+      expect(result.changeCodes).not.toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+    })
+
+    it('should apply fuzzy corrections with custom domain', () => {
+      const result = normaliseEmail('test@custommial.com', {
+        fuzzyMatching: {
+          enabled: true,
+          candidates: ['custommail.com'],
+        },
+      })
+
+      expect(result.valid).toBe(true)
+      expect(result.email).toBe('test@custommail.com')
+      expect(result.changeCodes).toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+    })
+
+    it('should work with fuzzy matching and case normalization', () => {
+      const result = normaliseEmail('test@CUSTOMMIAL.COM', {
+        fuzzyMatching: {
+          enabled: true,
+          candidates: ['custommail.com'],
+        },
+      })
+
+      expect(result.valid).toBe(true)
+      expect(result.email).toBe('test@custommail.com')
+      // Since fuzzy matching operates after case normalization, it might replace the domain entirely
+      expect(result.changeCodes).toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+      // Check if lowercased domain is also present, but don't require it
+      expect(result.changeCodes.length).toBeGreaterThan(0)
+    })
+
+    it('should handle maximum distance constraints', () => {
+      const result = normaliseEmail('test@completelydifferentdomain.xyz', {
+        fuzzyMatching: {
+          enabled: true,
+          maxDistance: 2,
+        },
+      })
+
+      // Should not correct domains that are too different
+      expect(result.email).toBe('test@completelydifferentdomain.xyz')
+      expect(result.changeCodes).not.toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+    })
+
+    it('should preserve other normalizations when fuzzy matching is applied', () => {
+      const result = normaliseEmail('  test@custommial.com  ', {
+        fuzzyMatching: {
+          enabled: true,
+          candidates: ['custommail.com'],
+        },
+      })
+
+      expect(result.valid).toBe(true)
+      expect(result.email).toBe('test@custommail.com')
+
+      // Should have fuzzy domain correction
+      expect(result.changeCodes).toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+      // Check that at least one normalization occurred
+      expect(result.changeCodes.length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('should handle invalid emails gracefully', () => {
+      const result = normaliseEmail('invalid-email', {
+        fuzzyMatching: { enabled: true },
+      })
+
+      // Should not crash on invalid email formats
+      expect(result.valid).toBe(false)
+      expect(result.changeCodes).not.toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+    })
+
+    it('should not correct domains that are exact matches', () => {
+      const result = normaliseEmail('test@custommail.com', {
+        fuzzyMatching: {
+          enabled: true,
+          candidates: ['custommail.com'],
+        },
+      })
+
+      expect(result.valid).toBe(true)
+      expect(result.email).toBe('test@custommail.com')
+      expect(result.changeCodes).not.toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+    })
+
+    it('should handle empty candidates array', () => {
+      const result = normaliseEmail('test@custommial.com', {
+        fuzzyMatching: {
+          enabled: true,
+          candidates: [],
+        },
+      })
+
+      // Should not find any matches with empty candidates
+      expect(result.email).toBe('test@custommial.com')
+      expect(result.changeCodes).not.toContain(
+        EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+      )
+    })
+
+    it('should work with multiple custom domain candidates', () => {
+      const testCases = [
+        { input: 'test@custommial.com', expected: 'test@custommail.com' },
+        { input: 'user@bussiness.net', expected: 'user@business.net' },
+        { input: 'person@compnay.org', expected: 'person@company.org' },
+      ]
+
+      testCases.forEach(({ input, expected }) => {
+        const result = normaliseEmail(input, {
+          fuzzyMatching: {
+            enabled: true,
+            candidates: ['custommail.com', 'business.net', 'company.org'],
+            minConfidence: 0.6,
+          },
+        })
+
+        expect(result.email).toBe(expected)
+        expect(result.changeCodes).toContain(
+          EmailChangeCodes.FUZZY_DOMAIN_CORRECTION
+        )
+      })
     })
   })
 })

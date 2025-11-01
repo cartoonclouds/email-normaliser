@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **EmailFixResult** = `object`
 
-Defined in: [utils/email/normaliseEmail.ts:212](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L212)
+Defined in: [utils/email/types.ts:361](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L361)
 
 Result object returned by individual email transformation functions.
 
@@ -27,7 +27,7 @@ const result: EmailFixResult = toAsciiLike('ｊｏｈｎ＠ｅｘａｍｐｌｅ
 
 > **changed**: `boolean`
 
-Defined in: [utils/email/normaliseEmail.ts:216](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L216)
+Defined in: [utils/email/types.ts:365](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L365)
 
 Whether any changes were made during the transformation
 
@@ -37,6 +37,6 @@ Whether any changes were made during the transformation
 
 > **out**: `string`
 
-Defined in: [utils/email/normaliseEmail.ts:214](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L214)
+Defined in: [utils/email/types.ts:363](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L363)
 
 The transformed email string after applying the fix

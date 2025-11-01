@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **checkTld**(`email`, `tlds`): `boolean`
 
-Defined in: [utils/email/validateEmail.ts:375](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L375)
+Defined in: [utils/email/validateEmail.ts:251](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/validateEmail.ts#L251)
 
 Check if email TLD matches any in the provided TLDs list.
 

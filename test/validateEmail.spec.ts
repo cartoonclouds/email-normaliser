@@ -4,10 +4,10 @@ import {
   DEFAULT_BLOCKLIST,
   DEFAULT_FIX_DOMAINS,
   DEFAULT_FIX_TLDS,
-} from '../src/utils/email/constants'
-import {
   type EmailValidationCode,
   EmailValidationCodes,
+} from '../src/utils/email/constants'
+import {
   validateEmail,
   validationCodeToReason,
 } from '../src/utils/email/validateEmail'
@@ -1495,6 +1495,212 @@ describe('validateEmail', () => {
           const result = validateEmail('üser@gmail.com', { asciiOnly: false })
           expect(result).toHaveLength(1)
           expect(result[0].validationCode).toBe(EmailValidationCodes.VALID)
+        })
+      })
+
+      describe('fuzzy domain matching', () => {
+        it('should not suggest anything when fuzzy matching is disabled', () => {
+          const result = validateEmail('user@gmailx.net') // Domain not in DEFAULT_FIX_DOMAINS
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(EmailValidationCodes.VALID)
+        })
+
+        it('should suggest domain corrections when fuzzy matching is enabled', () => {
+          const result = validateEmail('user@gmaiil.com', {
+            // Domain not in DEFAULT_FIX_DOMAINS, but close to gmail.com
+            fuzzyMatching: { enabled: true },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(
+            EmailValidationCodes.DOMAIN_SUGGESTION
+          )
+          expect(result[0].validationMessage).toBe(
+            'Did you mean: user@gmail.com?'
+          )
+          expect(result[0].suggestion).toEqual({
+            originalDomain: 'gmaiil.com',
+            suggestedDomain: 'gmail.com',
+            confidence: expect.any(Number),
+          })
+          expect(result[0].suggestion?.confidence).toBeGreaterThan(0.8) // Should be high confidence
+        })
+
+        it('should respect maxDistance configuration', () => {
+          // This should not suggest anything with maxDistance of 0
+          const result = validateEmail('user@verywrongdomain.com', {
+            fuzzyMatching: { enabled: true, maxDistance: 0 },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(EmailValidationCodes.VALID)
+        })
+
+        it('should respect minConfidence configuration', () => {
+          // This should not suggest anything with very high confidence requirement
+          const result = validateEmail('user@verywrongdomain.com', {
+            fuzzyMatching: { enabled: true, minConfidence: 0.99 },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(EmailValidationCodes.VALID)
+        })
+
+        it('should work with custom domain candidates', () => {
+          const result = validateEmail('user@mycorpx.com', {
+            fuzzyMatching: {
+              enabled: true,
+              candidates: ['mycorp.com'],
+              minConfidence: 0.5,
+            },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(
+            EmailValidationCodes.DOMAIN_SUGGESTION
+          )
+          expect(result[0].suggestion?.suggestedDomain).toBe('mycorp.com')
+        })
+
+        it('should combine custom candidates with default candidates', () => {
+          // Test that custom candidates are added to defaults, not replacing them
+          const customResult = validateEmail('user@customdomain.co', {
+            fuzzyMatching: {
+              enabled: true,
+              candidates: ['customdomain.com'],
+              minConfidence: 0.6,
+            },
+          })
+          expect(customResult).toHaveLength(2) // INVALID_TLD + DOMAIN_SUGGESTION
+          const suggestionResult = customResult.find(
+            (r) => r.validationCode === EmailValidationCodes.DOMAIN_SUGGESTION
+          )
+          expect(suggestionResult).toBeDefined()
+          expect(suggestionResult?.suggestion?.suggestedDomain).toBe(
+            'customdomain.com'
+          )
+
+          // Test that default candidates still work when custom candidates are provided
+          const defaultResult = validateEmail('user@gmaiil.com', {
+            fuzzyMatching: {
+              enabled: true,
+              candidates: ['customdomain.com'], // Custom candidate that won't match
+            },
+          })
+          expect(defaultResult).toHaveLength(1)
+          expect(defaultResult[0].validationCode).toBe(
+            EmailValidationCodes.DOMAIN_SUGGESTION
+          )
+          expect(defaultResult[0].suggestion?.suggestedDomain).toBe('gmail.com') // From defaults
+        })
+
+        it('should not suggest when domain already matches exactly', () => {
+          const result = validateEmail('user@gmail.com', {
+            fuzzyMatching: { enabled: true },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(EmailValidationCodes.VALID)
+        })
+
+        it('should not suggest when domain matches exactly (case insensitive)', () => {
+          const result = validateEmail('user@GMAIL.COM', {
+            fuzzyMatching: { enabled: true },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(EmailValidationCodes.VALID)
+        })
+
+        it('should work with UK domain typos', () => {
+          const result = validateEmail('user@virginmeda.co.uk', {
+            fuzzyMatching: { enabled: true, minConfidence: 0.6 },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(
+            EmailValidationCodes.DOMAIN_SUGGESTION
+          )
+          expect(result[0].suggestion?.suggestedDomain).toContain('virginmedia')
+        })
+
+        it('should handle malformed emails gracefully', () => {
+          const result = validateEmail('invalid-email', {
+            fuzzyMatching: { enabled: true },
+          })
+          // Should fail format validation, not try fuzzy matching
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(
+            EmailValidationCodes.INVALID_FORMAT
+          )
+        })
+
+        it('should work with additional fuzzy matching options', () => {
+          const result = validateEmail('user@gmailx.net', {
+            fuzzyMatching: {
+              enabled: true,
+              minConfidence: 0.5, // Lower threshold to accommodate gmailx.net (0.6 confidence)
+              findClosestOptions: { normalize: true },
+            },
+          })
+          // Should work with lower confidence threshold
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(
+            EmailValidationCodes.DOMAIN_SUGGESTION
+          )
+        })
+
+        it('should combine with other validation errors', () => {
+          const result = validateEmail('üser@gmaiil.com', {
+            asciiOnly: true,
+            fuzzyMatching: { enabled: true },
+          })
+          // Should return both ASCII error and domain suggestion
+          expect(result).toHaveLength(2)
+          const codes = result.map((r) => r.validationCode)
+          expect(codes).toContain(EmailValidationCodes.NON_ASCII_CHARACTERS)
+          expect(codes).toContain(EmailValidationCodes.DOMAIN_SUGGESTION)
+        })
+
+        it('should handle edge case with no @ symbol in fuzzy matching', () => {
+          // This should skip fuzzy matching since looksLikeEmail fails
+          const result = validateEmail('invalid', {
+            fuzzyMatching: { enabled: true },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(
+            EmailValidationCodes.INVALID_FORMAT
+          )
+        })
+
+        it('should respect default configuration values', () => {
+          const result = validateEmail('user@gmil.com', {
+            fuzzyMatching: { enabled: true }, // Using all defaults
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(
+            EmailValidationCodes.DOMAIN_SUGGESTION
+          )
+        })
+
+        it('should not suggest when no candidate meets criteria', () => {
+          const result = validateEmail('user@totallywrongdomain.invalidtld', {
+            fuzzyMatching: {
+              enabled: true,
+              maxDistance: 1,
+              minConfidence: 0.9,
+            },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(EmailValidationCodes.VALID)
+        })
+
+        it('should handle very confident but distant matches', () => {
+          const result = validateEmail('user@gmailx.com', {
+            fuzzyMatching: {
+              enabled: true,
+              minConfidence: 0.5,
+              maxDistance: 10,
+            },
+          })
+          expect(result).toHaveLength(1)
+          expect(result[0].validationCode).toBe(
+            EmailValidationCodes.DOMAIN_SUGGESTION
+          )
+          expect(result[0].suggestion?.suggestedDomain).toBe('gmail.com')
         })
       })
     })

@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > `const` **DEFAULT\_FIX\_TLDS**: `Record`\<`string`, `string`\>
 
-Defined in: [utils/email/constants.ts:142](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/constants.ts#L142)
+Defined in: [utils/email/constants.ts:142](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/constants.ts#L142)
 
 Default Top-Level Domain (TLD) correction mappings for common typos.
 

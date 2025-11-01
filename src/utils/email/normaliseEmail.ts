@@ -2,219 +2,18 @@ import {
   DEFAULT_BLOCKLIST,
   DEFAULT_FIX_DOMAINS,
   DEFAULT_FIX_TLDS,
+  DEFAULT_FUZZY_DOMAIN_CANDIDATES,
+  type EmailChangeCode,
+  EmailChangeCodes,
 } from './constants'
+import { findClosestDomain } from './fuzzyDomainMatching'
+import type {
+  EmailFixResult,
+  EmailNormOptions,
+  EmailNormResult,
+  FindClosestOptions,
+} from './types'
 import { blocklisted, isEmpty, looksLikeEmail } from './validateEmail'
-
-// --- types and constants ------------------------------------------
-
-/**
- * Result of a full email normalisation pass.
- *
- * Contains the final (possibly corrected) email, whether it’s now valid,
- * and both human- and machine-readable change trails.
- *
- * @example
- * ```ts
- * const { email, valid, changes, changeCodes }: EmailNormResult =
- *   normaliseEmail(' JANE.DOÉ @ gmai .com  ');
- *
- * // email       → "jane.doe@gmail.com"
- * // valid       → true
- * // changes     → ["trimmed whitespace", "lowercased", "fixed common domain typo: gmai → gmail", "removed non-ASCII: É → E"]
- * // changeCodes → ["TRIM", "LOWERCASE", "FIX_DOMAIN_TYPO", "NON_ASCII_REMOVED"]
- * ```
- */
-export type EmailNormResult = {
-  /** The normalized email address, or null if normalization failed */
-  email: string | null
-  /** Whether the final normalized email passes validation */
-  valid: boolean
-  /** Human-readable descriptions of all changes made during normalization */
-  changes: string[]
-  /** Machine-readable codes for all changes made during normalization */
-  changeCodes: EmailChangeCode[]
-}
-
-/**
- * Enumeration of all possible email normalization change codes.
- *
- * These machine-readable codes represent specific transformations that can be
- * applied during the email normalization process. Each code corresponds to a
- * specific step in the normalization pipeline.
- *
- * @example
- * ```typescript
- * const result = normaliseEmail('User (comment) at gmail dot com')
- * // result.changeCodes might include:
- * // ['stripped_display_name_and_comments', 'deobfuscated_at_and_dot', 'lowercased_domain']
- * ```
- */
-export const EmailChangeCodes = Object.freeze({
-  /** Email input was empty or only whitespace */
-  EMPTY: 'empty',
-  /** Email was blocked by the configured blocklist */
-  BLOCKED_BY_LIST: 'blocked_by_list',
-  /** Replaced obfuscated "at" and "dot" text with @ and . symbols */
-  DEOBFUSCATED_AT_AND_DOT: 'deobfuscated_at_and_dot',
-  /** Applied domain and TLD typo corrections from the fix mappings */
-  FIXED_DOMAIN_AND_TLD_TYPOS: 'fixed_domain_and_tld_typos',
-  /** Email format was invalid and could not be normalized */
-  INVALID_EMAIL_SHAPE: 'invalid_email_shape',
-  /** Converted domain part to lowercase */
-  LOWERCASED_DOMAIN: 'lowercased_domain',
-  /** Converted Unicode symbols (＠, ．, 。) to ASCII equivalents */
-  NORMALIZED_UNICODE_SYMBOLS: 'normalized_unicode_symbols',
-  /** Removed display names, comments, or angle bracket formatting */
-  STRIPPED_DISPLAY_NAME_AND_COMMENTS: 'stripped_display_name_and_comments',
-  /** Cleaned up spacing, punctuation, and formatting issues */
-  TIDIED_PUNCTUATION_AND_SPACING: 'tidied_punctuation_and_spacing',
-  /** Converted non-ASCII characters to ASCII equivalents or removed them */
-  CONVERTED_TO_ASCII: 'converted_to_ascii',
-} as const)
-
-/**
- * Machine-readable code for a single normalization change.
- *
- * This is the union of the values from `EmailChangeCodes`. Use it to build
- * analytics, filtering, or to toggle UI badges without stringly-typed checks.
- *
- * @example
- * ```ts
- * function hasAsciiFix(r: EmailNormResult) {
- *   return r.changeCodes.includes(EmailChangeCodes.NON_ASCII_REMOVED as EmailChangeCode);
- * }
- * ```
- */
-export type EmailChangeCode =
-  (typeof EmailChangeCodes)[keyof typeof EmailChangeCodes]
-
-/**
- * Block/allow configuration for domains and TLDs.
- *
- * You can combine exact, suffix, wildcard and TLD rules, and then punch holes
- * via `allow.exact`. Values are compared case-insensitively.
- *
- * @example
- * ```ts
- * const cfg: EmailBlockConfig = {
- *   block: {
- *     exact: ['example.com', 'test.local'],
- *     suffix: ['.invalid', '.local'],
- *     wildcard: ['*.mailinator.com', '*.disposable.*'],
- *     tlds: ['.zip', '.example']
- *   },
- *   allow: { exact: ['my-team.example.com'] }
- * };
- * ```
- *
- * @example
- * ```ts
- * // Checking a domain against the config:
- * isBlocked('user@mailinator.com', cfg)  // → true (wildcard)
- * isBlocked('boss@my-team.example.com', cfg) // → false (allow.exact)
- * ```
- */
-export type EmailBlockConfig = {
-  block?: {
-    /**
-     * Exact match patterns.
-     */
-    exact?: string[]
-    /**
-     * Suffix match patterns.
-     *
-     * E.g. ".example" matches "user@example", "
-     */
-    suffix?: string[]
-    /**
-     * Wildcard match patterns.
-     *
-     * E.g. "*.mailinator.com" matches "abc.mailinator.com", "xyz.mailinator.com.au", etc.
-     */
-    wildcard?: string[]
-    /**
-     * Top-level domains to block.
-     *
-     * E.g. ".test", ".invalid"
-     */
-    tlds?: string[]
-  }
-  /** Allowlist configuration that overrides block rules for specific domains */
-  allow?: {
-    /** Exact domain matches that should be allowed despite being in block rules */
-    exact?: string[]
-  }
-}
-
-/**
- * Options that influence normalisation behaviour.
- *
- * All maps are merged with sensible defaults (see constants). Set `ascii.only`
- * to `false` to accept internationalised mail addresses (IDN/UTF-8 local-parts).
- *
- * @example
- * ```ts
- * const opts: EmailNormOptions = {
- *   blocklist: { block: { wildcard: ['*.throwaway.*'] } },
- *   fixDomains: { 'gmai.com': 'gmail.com' },
- *   fixTlds: { '.con': '.com' },
- *   ascii: { only: true, transliterate: true }
- * };
- *
- * const r = normaliseEmail('José@exämple.con', opts);
- * // → "jose@example.com"
- * ```
- */
-export type EmailNormOptions = {
-  /**
-   * Blocklist configuration for email validation (merges with default).
-   *
-   * @default DEFAULT_BLOCKLIST
-   */
-  blocklist?: EmailBlockConfig
-  /**
-   * Fix common domain typos (merges with default).
-   *
-   * @default DEFAULT_FIX_DOMAINS
-   */
-  fixDomains?: Record<string, string>
-  /**
-   * Fix common TLD typos (merges with default).
-   *
-   * @default DEFAULT_FIX_TLDS
-   */
-  fixTlds?: Record<string, string>
-  /**
-   * Whether to allow only ASCII characters in email addresses.
-   *
-   * When `true` (default), non-ASCII characters will be considered invalid and
-   * the normalization process will attempt to remove or transliterate them.
-   * When `false`, international characters are allowed.
-   *
-   * @default true
-   */
-  asciiOnly?: boolean
-}
-
-/**
- * Result object returned by individual email transformation functions.
- *
- * Used internally by normalization helper functions to indicate whether
- * a specific transformation was applied and what the resulting string is.
- *
- * @example
- * ```typescript
- * const result: EmailFixResult = toAsciiLike('ｊｏｈｎ＠ｅｘａｍｐｌｅ．ｃｏｍ');
- * // result.out    → "john@example.com"
- * // result.changed → true
- * ```
- */
-export type EmailFixResult = {
-  /** The transformed email string after applying the fix */
-  out: string
-  /** Whether any changes were made during the transformation */
-  changed: boolean
-}
 
 // --- helpers -------------------------------------------------------
 
@@ -502,6 +301,9 @@ export function changeCodeToReason(code: EmailChangeCode): string | null {
     case EmailChangeCodes.FIXED_DOMAIN_AND_TLD_TYPOS:
       return 'Corrected common domain or TLD typos.'
 
+    case EmailChangeCodes.FUZZY_DOMAIN_CORRECTION:
+      return 'Corrected domain using fuzzy matching.'
+
     case EmailChangeCodes.LOWERCASED_DOMAIN:
       return 'Lowercased domain part.'
 
@@ -526,6 +328,75 @@ export function changeCodeToReason(code: EmailChangeCode): string | null {
  */
 function mapChangeCodesToReason(codes: EmailChangeCode[]): string[] {
   return codes.map(changeCodeToReason).filter((r): r is string => r !== null)
+}
+
+/**
+ * Perform fuzzy domain correction for email normalization.
+ *
+ * Analyzes the email address and applies domain corrections
+ * based on fuzzy string matching with confidence scoring.
+ *
+ * @param {string} email - The email address to analyze
+ * @param {NonNullable<EmailNormOptions['fuzzyMatching']>} config - Fuzzy matching configuration
+ * @returns {{ correctedEmail: string; wasChanged: boolean }} Result with corrected email and change flag
+ *
+ * @example
+ * ```typescript
+ * const result = performFuzzyDomainNormalization('user@gmaiil.com', {
+ *   enabled: true,
+ *   minConfidence: 0.8
+ * })
+ *
+ * if (result.wasChanged) {
+ *   console.log(`Corrected: ${result.correctedEmail}`) // "user@gmail.com"
+ * }
+ * ```
+ */
+function performFuzzyDomainNormalization(
+  email: string,
+  config: NonNullable<EmailNormOptions['fuzzyMatching']>
+): { correctedEmail: string; wasChanged: boolean } {
+  // Early return if not enabled or email doesn't look valid
+  if (!config.enabled || !looksLikeEmail(email)) {
+    return { correctedEmail: email, wasChanged: false }
+  }
+
+  const atIndex = email.lastIndexOf('@')
+  if (atIndex === -1) {
+    return { correctedEmail: email, wasChanged: false }
+  }
+
+  const localPart = email.slice(0, atIndex)
+  const domainPart = email.slice(atIndex + 1)
+
+  // Combine default candidates with any custom candidates provided
+  const allCandidates = config.candidates
+    ? [...DEFAULT_FUZZY_DOMAIN_CANDIDATES, ...config.candidates]
+    : [...DEFAULT_FUZZY_DOMAIN_CANDIDATES]
+
+  const fuzzyOptions: FindClosestOptions = {
+    maxDistance: config.maxDistance ?? 5,
+    candidates: allCandidates,
+    ...(config.findClosestOptions || {}),
+  }
+
+  const result = findClosestDomain(domainPart, fuzzyOptions)
+  const minConfidence = config.minConfidence ?? 0.8
+
+  // Only apply correction if we found a candidate, it's different from input, and meets confidence threshold
+  if (
+    result.candidate &&
+    result.candidate !== domainPart.toLowerCase() &&
+    result.normalizedScore >= minConfidence &&
+    result.distance > 0
+  ) {
+    const correctedEmail = `${localPart}@${result.candidate}`
+    if (correctedEmail !== email) {
+      return { correctedEmail, wasChanged: true }
+    }
+  }
+
+  return { correctedEmail: email, wasChanged: false }
 }
 
 // --- main ----------------------------------------------------------
@@ -595,6 +466,16 @@ export function normaliseEmail(
     if (r.changed) {
       s = r.out
       changes.push(EmailChangeCodes.FIXED_DOMAIN_AND_TLD_TYPOS)
+    }
+  }
+
+  // Apply fuzzy domain matching if enabled
+  const fuzzyConfig = opts.fuzzyMatching
+  if (fuzzyConfig) {
+    const fuzzyResult = performFuzzyDomainNormalization(s, fuzzyConfig)
+    if (fuzzyResult.wasChanged) {
+      s = fuzzyResult.correctedEmail
+      changes.push(EmailChangeCodes.FUZZY_DOMAIN_CORRECTION)
     }
   }
 

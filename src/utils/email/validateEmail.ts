@@ -2,147 +2,20 @@ import {
   DEFAULT_BLOCKLIST,
   DEFAULT_FIX_DOMAINS,
   DEFAULT_FIX_TLDS,
+  DEFAULT_FUZZY_DOMAIN_CANDIDATES,
+  type EmailValidationCode,
+  EmailValidationCodes,
 } from './constants'
-import type { EmailBlockConfig } from './normaliseEmail'
+import { findClosestDomain } from './fuzzyDomainMatching'
+import type {
+  EmailBlockConfig,
+  EmailValidationOptions,
+  FindClosestOptions,
+  ValidationResult,
+  ValidationResults,
+} from './types'
 
-// --- types -------------------------------------------------------
-
-/**
- * Enumeration of all possible email validation result codes.
- *
- * These codes represent the different validation states an email address
- * can have during the validation process. Each code corresponds to a
- * specific validation check.
- *
- * @example
- * ```typescript
- * const results = validateEmail('user@invalid-domain')
- * // results[0].validationCode might be EmailValidationCodes.INVALID_DOMAIN
- * ```
- */
-export const EmailValidationCodes = Object.freeze({
-  /** Email address passed all validation checks */
-  VALID: 'VALID',
-  /** Email input was empty or only whitespace */
-  EMPTY: 'EMPTY',
-  /** Email format does not match valid email structure */
-  INVALID_FORMAT: 'INVALID_FORMAT',
-  /** Email domain is in the configured blocklist */
-  BLOCKLISTED: 'BLOCKLISTED',
-  /** Email domain matches a known typo in the corrections list */
-  INVALID_DOMAIN: 'INVALID_DOMAIN',
-  /** Email TLD matches a known typo in the corrections list */
-  INVALID_TLD: 'INVALID_TLD',
-  /** Email contains non-ASCII characters when ASCII-only mode is enabled */
-  NON_ASCII_CHARACTERS: 'NON_ASCII_CHARACTERS',
-} as const)
-
-/**
- * Type representing any valid email validation code from the EmailValidationCodes enumeration.
- *
- * This is a union type of all possible validation code values that can be returned
- * during email validation.
- *
- * @example
- * ```ts
- * function isFormatError(code: EmailValidationCode) {
- *   return code === EmailValidationCodes.INVALID_FORMAT;
- * }
- * ```
- */
-export type EmailValidationCode =
-  (typeof EmailValidationCodes)[keyof typeof EmailValidationCodes]
-
-/**
- * Individual validation result for a specific validation check.
- *
- * Contains the validation status, the specific validation code that was triggered,
- * and a human-readable message explaining the validation result.
- *
- * @example
- * ```typescript
- * const result: ValidationResult = {
- *   isValid: false,
- *   validationCode: EmailValidationCodes.INVALID_FORMAT,
- *   validationMessage: 'Email is not in a valid format.'
- * }
- * ```
- */
-export type ValidationResult = {
-  /** Whether this specific validation check passed */
-  isValid: boolean
-  /** The specific validation code that was triggered */
-  validationCode: EmailValidationCode
-  /** Human-readable explanation of the validation result */
-  validationMessage: string
-}
-
-/**
- * Array of validation results from all validation checks performed on an email address.
- *
- * If the email is valid, this will contain a single ValidationResult with isValid: true.
- * If the email is invalid, this will contain one or more ValidationResult objects
- * describing each validation failure.
- *
- * @example
- * ```typescript
- * const results: ValidationResults = validateEmail('invalid@')
- * // results = [{
- * //   isValid: false,
- * //   validationCode: 'INVALID_FORMAT',
- * //   validationMessage: 'Email is not in a valid format.'
- * // }]
- * ```
- */
-export type ValidationResults = ValidationResult[]
-
-/**
- * Configuration options for email validation.
- *
- * Allows customization of the validation process by providing custom
- * domain corrections, TLD corrections, blocklist rules, and ASCII-only validation.
- *
- * @example
- * ```typescript
- * const options: EmailValidationOptions = {
- *   fixDomains: { 'mytypo.com': 'correct.com' },
- *   fixTlds: { '.typo': '.com' },
- *   blocklist: {
- *     block: { exact: ['unwanted.domain'] }
- *   },
- *   asciiOnly: true
- * }
- * ```
- */
-export type EmailValidationOptions = {
-  /**
-   * Blocklist configuration for email validation.
-   *
-   * @default DEFAULT_BLOCKLIST
-   */
-  blocklist?: EmailBlockConfig
-  /**
-   * Fix common domain typos configuration.
-   *
-   * @default DEFAULT_FIX_DOMAINS
-   */
-  fixDomains?: Record<string, string>
-  /**
-   * Fix common TLD typos configuration.
-   *
-   * @default DEFAULT_FIX_TLDS
-   */
-  fixTlds?: Record<string, string>
-  /**
-   * Whether to allow only ASCII characters in email addresses.
-   *
-   * When `true` (default), non-ASCII characters will be considered invalid.
-   * When `false`, international characters are allowed.
-   *
-   * @default true
-   */
-  asciiOnly?: boolean
-}
+// --- helpers -------------------------------------------------------
 
 // --- helpers -------------------------------------------------------
 
@@ -176,6 +49,9 @@ export function validationCodeToReason(
 
     case EmailValidationCodes.VALID:
       return 'Email is valid.'
+
+    case EmailValidationCodes.DOMAIN_SUGGESTION:
+      return 'Email domain has a suggested correction.'
 
     default:
       console.debug(`Unknown validation code: ${code as string}`)
@@ -406,6 +282,83 @@ function hasNonAsciiCharacters(text: string): boolean {
 }
 
 /**
+ * Perform fuzzy domain matching for email validation suggestions.
+ *
+ * Analyzes the email address and provides domain correction suggestions
+ * based on fuzzy string matching with confidence scoring.
+ *
+ * @param {string} email - The email address to analyze
+ * @param {NonNullable<EmailValidationOptions['fuzzyMatching']>} config - Fuzzy matching configuration
+ * @returns {ValidationResult | null} Validation result with domain suggestion or null if no suggestion
+ *
+ * @example
+ * ```typescript
+ * const suggestion = performFuzzyDomainValidation('user@gmaiil.com', {
+ *   enabled: true,
+ *   minConfidence: 0.7
+ * })
+ *
+ * if (suggestion) {
+ *   console.log(suggestion.validationMessage) // "Did you mean: user@gmail.com?"
+ *   console.log(suggestion.suggestion?.confidence) // 0.89
+ * }
+ * ```
+ */
+function performFuzzyDomainValidation(
+  email: string,
+  config: NonNullable<EmailValidationOptions['fuzzyMatching']>
+): ValidationResult | null {
+  // Early return if not enabled or email doesn't look valid
+  if (!config.enabled || !looksLikeEmail(email)) {
+    return null
+  }
+
+  const atIndex = email.lastIndexOf('@')
+  if (atIndex === -1) {
+    return null
+  }
+
+  const localPart = email.slice(0, atIndex)
+  const domainPart = email.slice(atIndex + 1)
+
+  // Combine default candidates with any custom candidates provided
+  const allCandidates = config.candidates
+    ? [...DEFAULT_FUZZY_DOMAIN_CANDIDATES, ...config.candidates]
+    : [...DEFAULT_FUZZY_DOMAIN_CANDIDATES] // Convert readonly array to mutable array
+
+  const fuzzyOptions: FindClosestOptions = {
+    maxDistance: config.maxDistance ?? 5, // Increased default to allow for more distant matches
+    candidates: allCandidates,
+    ...(config.findClosestOptions || {}),
+  }
+
+  const result = findClosestDomain(domainPart, fuzzyOptions)
+  const minConfidence = config.minConfidence ?? 0.7
+
+  // Only suggest if we found a candidate, it's different from input, and meets confidence threshold
+  if (
+    result.candidate &&
+    result.candidate !== domainPart.toLowerCase() &&
+    result.normalizedScore >= minConfidence &&
+    result.distance > 0
+  ) {
+    const suggestedEmail = `${localPart}@${result.candidate}`
+    return {
+      isValid: false,
+      validationCode: EmailValidationCodes.DOMAIN_SUGGESTION,
+      validationMessage: `Did you mean: ${suggestedEmail}?`,
+      suggestion: {
+        originalDomain: domainPart,
+        suggestedDomain: result.candidate,
+        confidence: result.normalizedScore,
+      },
+    }
+  }
+
+  return null
+}
+
+/**
  * Validate an email address and return validation results.
  *
  * Performs comprehensive validation including:
@@ -414,6 +367,7 @@ function hasNonAsciiCharacters(text: string): boolean {
  * - TLD validation (top-level domain corrections)
  * - Blocklist checking (known bad domains)
  * - ASCII-only validation (when enabled)
+ * - Fuzzy domain matching for intelligent suggestions (when enabled)
  *
  * @param {string} email - The email address to validate
  * @param {EmailValidationOptions} options - Optional validation configuration
@@ -429,6 +383,15 @@ function hasNonAsciiCharacters(text: string): boolean {
  *   asciiOnly: true
  * })
  * // Custom validation with TLD correction and ASCII-only
+ *
+ * const fuzzyResults = validateEmail('user@gmai.com', {
+ *   fuzzyMatching: {
+ *     enabled: true,
+ *     maxDistance: 2,
+ *     minConfidence: 0.7
+ *   }
+ * })
+ * // Fuzzy validation with domain suggestions: suggests gmail.com
  * ```
  */
 export function validateEmail(
@@ -503,6 +466,15 @@ export function validateEmail(
         EmailValidationCodes.NON_ASCII_CHARACTERS
       ) as string,
     })
+  }
+
+  // Perform fuzzy domain matching if enabled and email has basic structure
+  const fuzzyConfig = options.fuzzyMatching
+  if (fuzzyConfig) {
+    const fuzzyResult = performFuzzyDomainValidation(email, fuzzyConfig)
+    if (fuzzyResult) {
+      validationResults.push(fuzzyResult)
+    }
   }
 
   return validationResults.length

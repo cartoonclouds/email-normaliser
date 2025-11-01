@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **validateEmail**(`email`, `options`): [`ValidationResults`](../type-aliases/ValidationResults.md)
 
-Defined in: [utils/email/validateEmail.ts:434](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L434)
+Defined in: [utils/email/validateEmail.ts:397](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/validateEmail.ts#L397)
 
 Validate an email address and return validation results.
 
@@ -16,6 +16,7 @@ Performs comprehensive validation including:
 - TLD validation (top-level domain corrections)
 - Blocklist checking (known bad domains)
 - ASCII-only validation (when enabled)
+- Fuzzy domain matching for intelligent suggestions (when enabled)
 
 ## Parameters
 
@@ -46,4 +47,13 @@ const customResults = validateEmail('user@typo.co', {
   asciiOnly: true
 })
 // Custom validation with TLD correction and ASCII-only
+
+const fuzzyResults = validateEmail('user@gmai.com', {
+  fuzzyMatching: {
+    enabled: true,
+    maxDistance: 2,
+    minConfidence: 0.7
+  }
+})
+// Fuzzy validation with domain suggestions: suggests gmail.com
 ```

@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **validationCodeToReason**(`code`): `string` \| `null`
 
-Defined in: [utils/email/validateEmail.ts:155](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L155)
+Defined in: [utils/email/validateEmail.ts:28](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/validateEmail.ts#L28)
 
 Convert a validation code to a human-readable reason.
 

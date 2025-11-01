@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,11 +6,11 @@
 
 > **EmailNormOptions** = `object`
 
-Defined in: [utils/email/normaliseEmail.ts:168](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L168)
+Defined in: [utils/email/types.ts:278](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L278)
 
 Options that influence normalisation behaviour.
 
-All maps are merged with sensible defaults (see constants). Set `ascii.only`
+All maps are merged with sensible defaults (see constants). Set `asciiOnly`
 to `false` to accept internationalised mail addresses (IDN/UTF-8 local-parts).
 
 ## Example
@@ -20,7 +20,7 @@ const opts: EmailNormOptions = {
   blocklist: { block: { wildcard: ['*.throwaway.*'] } },
   fixDomains: { 'gmai.com': 'gmail.com' },
   fixTlds: { '.con': '.com' },
-  ascii: { only: true, transliterate: true }
+  asciiOnly: true
 };
 
 const r = normaliseEmail('José@exämple.con', opts);
@@ -33,7 +33,7 @@ const r = normaliseEmail('José@exämple.con', opts);
 
 > `optional` **asciiOnly**: `boolean`
 
-Defined in: [utils/email/normaliseEmail.ts:196](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L196)
+Defined in: [utils/email/types.ts:306](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L306)
 
 Whether to allow only ASCII characters in email addresses.
 
@@ -53,7 +53,7 @@ true
 
 > `optional` **blocklist**: [`EmailBlockConfig`](EmailBlockConfig.md)
 
-Defined in: [utils/email/normaliseEmail.ts:174](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L174)
+Defined in: [utils/email/types.ts:284](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L284)
 
 Blocklist configuration for email validation (merges with default).
 
@@ -69,7 +69,7 @@ DEFAULT_BLOCKLIST
 
 > `optional` **fixDomains**: `Record`\<`string`, `string`\>
 
-Defined in: [utils/email/normaliseEmail.ts:180](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L180)
+Defined in: [utils/email/types.ts:290](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L290)
 
 Fix common domain typos (merges with default).
 
@@ -85,7 +85,7 @@ DEFAULT_FIX_DOMAINS
 
 > `optional` **fixTlds**: `Record`\<`string`, `string`\>
 
-Defined in: [utils/email/normaliseEmail.ts:186](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L186)
+Defined in: [utils/email/types.ts:296](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L296)
 
 Fix common TLD typos (merges with default).
 
@@ -93,4 +93,74 @@ Fix common TLD typos (merges with default).
 
 ```ts
 DEFAULT_FIX_TLDS
+```
+
+***
+
+### fuzzyMatching?
+
+> `optional` **fuzzyMatching**: `object`
+
+Defined in: [utils/email/types.ts:313](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/types.ts#L313)
+
+Fuzzy domain matching configuration for intelligent domain corrections.
+
+When enabled, applies fuzzy string matching to detect and correct
+potential domain typos that aren't covered by the exact fix mappings.
+
+#### candidates?
+
+> `optional` **candidates**: `string`[]
+
+Additional domain candidates for fuzzy matching.
+These will be combined with the built-in DEFAULT_FUZZY_DOMAIN_CANDIDATES list.
+
+##### Default
+
+```ts
+[]
+```
+
+#### enabled?
+
+> `optional` **enabled**: `boolean`
+
+Whether to enable fuzzy domain matching.
+
+##### Default
+
+```ts
+false
+```
+
+#### findClosestOptions?
+
+> `optional` **findClosestOptions**: `Omit`\<[`FindClosestOptions`](FindClosestOptions.md), `"candidates"` \| `"maxDistance"`\>
+
+Additional fuzzy matching options passed to findClosestDomain.
+
+#### maxDistance?
+
+> `optional` **maxDistance**: `number`
+
+Maximum edit distance for domain corrections.
+Lower values are more restrictive, higher values allow more distant matches.
+
+##### Default
+
+```ts
+5
+```
+
+#### minConfidence?
+
+> `optional` **minConfidence**: `number`
+
+Minimum confidence score (0-1) for domain corrections.
+Higher values only apply very confident corrections.
+
+##### Default
+
+```ts
+0.8
 ```

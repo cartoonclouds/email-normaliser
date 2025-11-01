@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **blocklisted**(`email`, `cfg`): `boolean`
 
-Defined in: [utils/email/validateEmail.ts:207](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L207)
+Defined in: [utils/email/validateEmail.ts:83](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/validateEmail.ts#L83)
 
 Check if email domain is blocklisted.
 

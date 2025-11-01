@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick } from 'vue'
 
+import { EmailChangeCodes } from '../src'
 import { useEmail } from '../src/composables/useEmail'
-import type { UseEmailOptions } from '../src/composables/useEmail'
-import {
-  EmailChangeCodes,
-  normaliseEmail,
-} from '../src/utils/email/normaliseEmail'
+import { normaliseEmail } from '../src/utils/email/normaliseEmail'
+import type { UseEmailOptions } from '../src/utils/email/types'
 
 // Mock the entire module
 vi.mock('../src/utils/email/normaliseEmail', () => ({

@@ -1,12 +1,7 @@
 import { computed, ref, watch } from 'vue'
 
-import {
-  type EmailNormOptions,
-  type EmailNormResult,
-  normaliseEmail,
-} from '../utils/email/normaliseEmail'
-
-export type UseEmailOptions = EmailNormOptions & { autoFormat?: boolean }
+import { normaliseEmail } from '../utils/email/normaliseEmail'
+import type { EmailNormResult, UseEmailOptions } from '../utils/email/types'
 
 /**
  * Vue composable for email normalization and validation.

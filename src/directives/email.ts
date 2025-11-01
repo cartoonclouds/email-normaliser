@@ -4,10 +4,8 @@ import {
   DEFAULT_FIX_DOMAINS,
   DEFAULT_FIX_TLDS,
 } from '../utils/email/constants'
-import {
-  type EmailNormOptions,
-  normaliseEmail,
-} from '../utils/email/normaliseEmail'
+import { normaliseEmail } from '../utils/email/normaliseEmail'
+import type { EmailNormOptions } from '../utils/email/types'
 
 /**
  * Email directive configurations

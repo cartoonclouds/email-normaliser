@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **changeCodeToReason**(`code`): `string` \| `null`
 
-Defined in: [utils/email/normaliseEmail.ts:485](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/normaliseEmail.ts#L485)
+Defined in: [utils/email/normaliseEmail.ts:284](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/normaliseEmail.ts#L284)
 
 Convert email change code to human-readable reason.
 

@@ -1,10 +1,8 @@
 # Development Guide
 
-This document provides comprehensive information for developers working on the `@cartoonclouds/contact-normalisers` package.
+This document provides comprehensive information for developers working on the `@cartoonclouds/email-normaliser` package.
 
 ## Local Development Setup
-
-This package is part of a monorepo structure. For local development:
 
 ```bash
 # Install dependencies (from the package directory)
@@ -13,10 +11,10 @@ npm install
 # Build the package (required before using in the main project)
 npm run build
 
-# Run tests with coverage (98%+ coverage achieved)
+# Run tests with coverage (100% coverage achieved for fuzzy matching)
 npm test
 
-# Run tests in watch mode during development  
+# Run tests in watch mode during development
 npm run test:watch
 
 # Generate documentation
@@ -33,401 +31,333 @@ If you're working within the monorepo, the package is installed as a local depen
 ```json
 {
   "dependencies": {
-    "@cartoonclouds/contact-normalisers": "./packages/plugins/contact-normalisers"
+    "@cartoonclouds/email-normaliser": "./packages/plugins/email-normaliser"
   }
 }
 ```
 
 ### Development Workflow
 
-After making changes to this package:
-
 1. **Build the package**: `npm run build`
 2. **Reinstall in main project**: `cd ../../ && npm install`
-3. **Restart dev server**: The changes will be reflected in the main application
+3. **Restart dev server**: changes will be reflected
 
 ### Hot Reload Development
 
-For faster development, you can use the watch mode:
-
 ```bash
-# In the contact-normalisers package directory
-npm run dev  # This runs tsup in watch mode
+npm run dev  # tsup watch
 ```
 
-This will automatically rebuild the package when you make changes to the source files.
+### Type Development Workflow
+
+When working with the centralized type system:
+
+1. **Adding New Types**:
+   ```bash
+   # Edit types in src/utils/email/types.ts
+   # Add comprehensive JSDoc documentation
+   # Include usage examples
+   ```
+
+2. **Type Validation**:
+   ```bash
+   npm run build  # Validates all type references
+   npm test       # Ensures type consistency in tests
+   ```
+
+3. **IDE Integration**:
+   - Use "Go to Definition" to navigate to centralized types
+   - Leverage IntelliSense for comprehensive type information
+   - Utilize JSDoc hover information for usage examples
 
 ## Package Structure
 
 ```
-packages/plugins/contact-normalisers/
+packages/plugins/email-normaliser/
 ├── src/
 │   ├── directives/     # Vue directives
-│   │   └── email.ts    # Email directive implementation
-│   ├── composables/    # Vue composables  
-│   │   └── useEmail.ts # Email composition API
-│   ├── utils/          # Core utilities
-│   │   └── email/      # Email-specific utilities
-│   │       ├── normaliseEmail.ts    # Core normalization logic
-│   │       ├── validateEmail.ts     # Validation functions
-│   │       ├── aiSuggestEmail.ts    # AI-powered suggestions
-│   │       └── constants.ts         # Default configurations
-│   └── index.ts        # Main exports
-├── test/               # Test files
-│   ├── email-directive.spec.ts     # Directive tests (44 tests)
-│   ├── normaliseEmail.spec.ts      # Normalization tests
-│   ├── validateEmail.spec.ts       # Validation tests
-│   ├── useEmail.spec.ts            # Composable tests
-│   └── aiSuggestEmail.spec.ts      # AI suggestion tests
-├── dist/               # Built files (generated)
-│   ├── index.js        # ESM build
-│   ├── index.cjs       # CommonJS build
-│   └── index.d.ts      # TypeScript declarations
-├── coverage/           # Test coverage reports (generated)
-├── docs/               # Generated documentation (via typedoc)
-└── README.md           # Main documentation
+│   │   └── email.ts
+│   ├── composables/    # Vue composables
+│   │   └── useEmail.ts
+│   ├── utils/
+│   │   └── email/
+│   │       ├── types.ts               # ⭐ Centralized type definitions
+│   │       ├── normaliseEmail.ts       # Core normalization logic
+│   │       ├── validateEmail.ts        # Validation functions
+│   │       ├── aiSuggestEmail.ts       # AI-powered suggestions
+│   │       ├── fuzzyDomainMatching.ts  # Levenshtein & closest-domain
+│   │       └── constants.ts            # Default configs & candidates
+│   └── index.ts
+├── test/
+│   ├── emailDirective.spec.ts
+│   ├── normaliseEmail.spec.ts
+│   ├── validateEmail.spec.ts
+│   ├── useEmail.spec.ts
+│   ├── fuzzyDomainMatching.spec.ts
+│   └── aiSuggestEmail.spec.ts
+├── dist/
+├── coverage/
+├── docs/
+└── README.md
 ```
+
+## Type System Architecture
+
+### Centralized Type Definitions
+
+All TypeScript types are consolidated in `src/utils/email/types.ts` for improved maintainability and developer experience. This centralized approach provides:
+
+#### Benefits
+- **Single Source of Truth**: All types defined in one location
+- **Consistent Documentation**: Comprehensive JSDoc with examples for all types
+- **Better Maintainability**: Changes only need to be made once
+- **Improved Tree Shaking**: Import only needed types
+- **Enhanced Developer Experience**: Easier type discovery and IDE support
+
+#### Type Categories
+- **Validation**: `ValidationResult`, `ValidationResults`, `EmailValidationOptions`
+- **Normalization**: `EmailNormResult`, `EmailNormOptions`, `EmailBlockConfig`, `EmailFixResult`
+- **Fuzzy Matching**: `DomainCandidate`, `ClosestDomainResult`, `FindClosestOptions`
+- **AI/ML**: `AiEmailSuggestion`, `AiEmailOptions`
+- **Vue Integration**: `UseEmailOptions`
+
+### Development Guidelines
+
+#### Adding New Types
+1. Define types in `src/utils/email/types.ts` with comprehensive JSDoc
+2. Include usage examples in the documentation
+3. Export from main `index.ts` if they're part of the public API
+4. Update tests to use centralized types
+5. Update README examples to reference the centralized types
+
+#### Type Import Patterns
+```typescript
+// ✅ Preferred: Import from centralized types module
+import type { EmailNormOptions, ValidationResult } from '../utils/email/types'
+
+// ❌ Avoid: Local type definitions in utility modules  
+// export type EmailNormOptions = { ... } // Don't do this anymore
+
+// ✅ Public API exports (main package)
+import type { EmailNormResult } from '@cartoonclouds/email-normaliser'
+```
+
+#### Migration Guidelines
+When adding new functionality:
+1. Define types first in `types.ts`
+2. Import types in implementation files
+3. Ensure all exports use centralized types
+4. Update tests to use centralized type imports
+5. Document type relationships and dependencies
 
 ## Testing
 
 ### Test Coverage
 
-The package maintains exceptional test coverage across all modules:
+- **Overall**: 99%+ statements/lines, 100% functions in fuzzy matching
+- **Modules**
+  - `useEmail.ts`: 100% across the board
+  - `email.ts` (directive): ~98% lines
+  - `normaliseEmail.ts`: ~99% lines
+  - `validateEmail.ts`: ~96% lines
+  - `fuzzyDomainMatching.ts`: 100% lines/statements/functions, ~97% branches (one unreachable defensive branch)
+  - `aiSuggestEmail.ts`: 100%
 
-#### Overall Package Coverage
-- **181 tests passed** (0 failed)
-- **4 test files** with comprehensive coverage
-- **New functionality**: Custom validation options, ASCII-only mode, internationalization
+### Test Distribution & Key Areas
 
-#### Individual Module Coverage
-| Module | Statement Coverage | Branch Coverage | Function Coverage | Lines Coverage | Uncovered Lines |
-|--------|-------------------|-----------------|-------------------|----------------|-----------------|
-| **useEmail.ts** (Composable) | 100% | 100% | 100% | 100% | None |
-| **email.ts** (Directive) | 98.19% | 93.33% | 100% | 98.19% | 120-121 |
-| **normaliseEmail.ts** | 99.25% | 98.79% | 100% | 99.25% | 374-375 |
-| **validateEmail.ts** | 96% | 84.48% | 100% | 96% | 181,189-190,299 |
-| **aiSuggestEmail.ts** | 100% | 100% | 100% | 100% | None |
-| **constants.ts** | 100% | 100% | 100% | 100% | None |
+- **Email Directive**: lifecycle, DOM interactions, SSR-ish jsdom
+- **Email Normalization**: all transformation rules, ASCII conversion, edge cases
+- **Email Validation**: all rules, custom options, blocklist behavior
+- **Composable**: reactivity & integration
+- **Fuzzy Domain Matching** *(merged from Recent Features)*:
+  - `levenshtein()` algorithm suite: exact/empty, insert/delete/substitute, early-exit, char-code paths
+  - `findClosestDomain()` suite: exact matches, fuzzy typo correction, custom candidates/thresholds, normalization, large sets, Unicode
+- **AI Suggestions**: suggestion logic & error handling
 
-#### Test Distribution
-- **Email Directive**: 44 test cases covering all lifecycle methods, DOM interactions, and edge cases
-- **Email Normalization**: 63+ comprehensive tests covering all transformation rules, ASCII conversion, and edge cases
-- **Email Validation**: 94+ tests covering all validation rules, custom options, and blocklist configurations  
-- **useEmail Composable**: 34 tests covering reactive behavior and Vue integration
-
-#### New Test Coverage Areas
-- **Custom Validation Options**: 24+ new test cases covering `fixDomains`, `fixTlds`, `blocklist`, and `asciiOnly` parameters
-- **ASCII-Only Mode**: Comprehensive testing of international character handling and transliteration
-- **Configuration Merging**: Tests for default option merging vs replacement behavior
-- **Backward Compatibility**: Ensures existing functionality remains unchanged
-
-#### Coverage Highlights
-- **98.77% overall coverage** for email utilities
-- **100% function coverage** across all modules
-- **Comprehensive edge case testing** including error scenarios
-- **Real DOM testing** with jsdom for directive functionality
-- **Vue integration testing** for composables and directives
-
-### Running Tests
+#### Running Tests
 
 ```bash
-# Run all tests with coverage
 npm test
-
-# Run tests in watch mode (useful during development)
 npm run test:watch
-
-# Run specific test file
-npx vitest run test/email-directive.spec.ts
-
-# Run with coverage report
+npx vitest run test/fuzzyDomainMatching.spec.ts
 npx vitest run --coverage
 ```
 
-#### Sample Test Execution Output
-
-```
-✓ packages/plugins/contact-normalisers/test/email-directive.spec.ts (44 tests) 40ms
-✓ packages/plugins/contact-normalisers/test/normaliseEmail.spec.ts (63 tests) 16ms  
-✓ packages/plugins/contact-normalisers/test/validateEmail.spec.ts (94 tests) 11ms
-✓ packages/plugins/contact-normalisers/test/useEmail.spec.ts (34 tests) 5ms
-
-Test Files  4 passed (4)
-     Tests  181 passed (181) 
-  Duration  5.57s
-```
-
-### Test Structure
-
-Each major component has comprehensive test coverage:
-
-- **Email Directive**: 44 test cases covering all lifecycle methods, DOM interactions, and edge cases
-- **Email Normalization**: Tests for all transformation rules, ASCII conversion, and edge cases
-- **Email Validation**: Tests for all validation rules, custom options, and blocklist configurations
-- **Composables**: Tests for reactive behavior and Vue integration  
-- **AI Suggestions**: Tests for domain suggestion logic and error handling
-
-### Recent Feature Additions
-
-#### Custom Configuration Options (v1.x)
-- **Configurable Validation**: `validateEmail` now accepts custom `fixDomains`, `fixTlds`, `blocklist`, and `asciiOnly` options
-- **Configurable Normalization**: `normaliseEmail` supports same options for consistent behavior
-- **ASCII-Only Mode**: Automatic transliteration of international characters (üser → User, José → Jose)
-- **Extensible Corrections**: Add custom domain/TLD corrections while preserving 67+ built-in fixes
-- **Flexible Blocklists**: Replace default blocklist entirely or extend with custom patterns
-
-#### Test Enhancements  
-- **24+ new test cases** for custom validation options
-- **Comprehensive ASCII testing** with international character sets
-- **Backward compatibility validation** ensuring existing functionality unchanged
-- **Configuration testing** for option merging vs replacement behavior
-
 ## Building
 
-The package uses [tsup](https://tsup.egoist.dev/) for building:
+Uses **tsup** for fast dual-builds and types.
 
 ```bash
-# Build once
 npm run build
-
-# Build in watch mode (for development)
 npm run dev
 ```
 
-### Build Outputs
-
-- **ESM**: `dist/index.js` - ES module format
-- **CJS**: `dist/index.cjs` - CommonJS format  
-- **Types**: `dist/index.d.ts` - TypeScript declarations
-- **Source Maps**: Generated for both formats
+Outputs:
+- **ESM**: `dist/index.js`
+- **CJS**: `dist/index.cjs`
+- **Types**: `dist/index.d.ts`
+- **Source maps** for both
 
 ## Documentation
 
-### Generating Docs
+Generate API docs with **TypeDoc**:
 
 ```bash
 npm run docs
 ```
 
-This generates comprehensive API documentation using [TypeDoc](https://typedoc.org/) based on JSDoc comments in the source code.
+### Public API (Reference)
 
-### JSDoc Standards
+> (Consolidated from previous sections, including fuzzy matching + custom options)
 
-All public APIs should include comprehensive JSDoc comments:
+```ts
+// Fuzzy algorithms
+export function levenshtein(a: string, b: string, maxDistance?: number): number
 
-```typescript
+export interface FindClosestOptions {
+  candidates?: readonly string[]
+  maxDistance?: number
+  normalize?: boolean
+}
+export interface ClosestDomainResult {
+  input: string
+  match?: string
+  distance: number
+}
+export function findClosestDomain(input: string, options?: FindClosestOptions): ClosestDomainResult
+
+// Validation/normalisation options
+export type EmailBlockConfig = (email: string) => boolean | RegExp[] | string[]
+
+export type EmailValidationOptions = {
+  blocklist?: EmailBlockConfig
+  fixDomains?: Record<string, string>
+  fixTlds?: Record<string, string>
+  asciiOnly?: boolean
+}
+export type EmailNormOptions = EmailValidationOptions
+
+export function validateEmail(email: string, options?: EmailValidationOptions): ValidationResults
+export function normaliseEmail(email: string, options?: EmailNormOptions): EmailNormResult
+```
+
+#### JSDoc Standards
+
+Document public APIs with examples:
+
+```ts
 /**
- * Normalize and validate an email address with comprehensive error checking.
- * 
- * @param email - The email address to normalize
- * @param options - Configuration options for normalization
- * @returns Detailed normalization result with validation status
- * 
+ * Normalize and validate an email address.
  * @example
- * ```typescript
- * const result = normaliseEmail('user@gamil.com')
- * console.log(result.email) // 'user@gmail.com'
- * console.log(result.valid) // true
- * ```
+ * const r = normaliseEmail('user@gamil.com')
+ * r.email  // 'user@gmail.com'
+ * r.valid  // true
  */
 ```
 
 ## Code Quality
 
-### Linting
-
-```bash
-npm run lint
-```
-
-The package uses ESLint with TypeScript configuration for code quality enforcement.
-
-### Type Safety
-
-- Full TypeScript support with strict configuration
-- Comprehensive type definitions for all APIs
-- Generic types for extensibility
-- Branded types for type safety
+- ESLint + TS strict
+- Typed public surface
+- Generic & branded types where appropriate
 
 ## Adding New Features
 
 ### Email Normalization Rules
 
-To add new normalization rules:
+1. Update `src/utils/email/constants.ts`
+2. Update `src/utils/email/normaliseEmail.ts`
+3. Add comprehensive tests
+4. Update docs & examples
 
-1. **Update constants**: Add new rules to `src/utils/email/constants.ts`
-2. **Update logic**: Modify `src/utils/email/normaliseEmail.ts`
-3. **Add tests**: Create comprehensive test cases
-4. **Update docs**: Document the new behavior
+### Fuzzy Domain Matching *(merged from Recent Features)*
 
-### Vue Integration
+- Algorithms live in `src/utils/email/fuzzyDomainMatching.ts`
+- Extend `DEFAULT_CANDIDATES` in `constants.ts` if adding built-in domains
+- Keep `FindClosestOptions` conservative; ship safe defaults
+- Ensure early-exit/threshold changes include perf tests
+- Maintain 100% statement/line/function coverage for this module
 
-When adding new Vue components:
+### Custom Validation Options *(merged from Recent Features)*
 
-1. **Follow composition API patterns**
-2. **Add comprehensive tests with jsdom**
-3. **Include lifecycle testing**
-4. **Test SSR compatibility**
+- Options accepted by **both** `validateEmail` and `normaliseEmail`
+  - `fixDomains`, `fixTlds`: **merge** with 67+ built-ins
+  - `blocklist`: **replaces** default when provided
+  - `asciiOnly`: off by default; enables transliteration + strict validation
 
 ## Release Process
 
-1. **Update version**: Bump version in `package.json`
-2. **Build package**: `npm run build`
-3. **Run tests**: `npm test`
-4. **Generate docs**: `npm run docs`
-5. **Commit changes**: Include build artifacts if needed
-6. **Tag release**: Create appropriate git tags
+1. Bump version in `package.json`
+2. `npm run build`
+3. `npm test`
+4. `npm run docs`
+5. Commit + tag
 
 ## API Compatibility
 
-### Recent Changes (Current Version)
+### Backward Compatible (current)
 
-#### ✅ Backward Compatible Changes
-- **Optional Parameters**: All new options are optional with sensible defaults
-- **Function Signatures**: Existing calls work unchanged (`validateEmail(email)`, `normaliseEmail(email)`)
-- **Return Types**: No changes to existing return value structures
-- **Default Behavior**: International characters still allowed by default
+- All new params optional with sensible defaults
+- Existing calls unchanged (`validateEmail(email)`, `normaliseEmail(email)`)
+- Return shapes preserved
+- International characters still allowed by default
 
-#### 🚀 New Functionality  
-- **Custom Options**: Both functions accept optional configuration objects
-- **ASCII-Only Mode**: New transliteration and validation capabilities
-- **Extensible Corrections**: Add custom domain/TLD fixes while preserving defaults
-- **Flexible Blocklists**: Replace or customize blocklist behavior
+### New Functionality *(merged)*
 
-#### 📝 Type Additions
-- `EmailValidationOptions` - Configuration for validateEmail
-- `EmailNormOptions.asciiOnly` - Boolean flag for ASCII-only mode  
-- `EmailChangeCodes.CONVERTED_TO_ASCII` - New change tracking code
-- `EmailValidationCodes.NON_ASCII_CHARACTERS` - New validation error code
+- **Fuzzy matching**: `levenshtein()` + `findClosestDomain()` with configurable candidates/thresholds
+- **Options**: `fixDomains`, `fixTlds`, `blocklist`, `asciiOnly`
+- **ASCII-Only Mode**:
+  - transliteration (e.g., ü→u, ñ→n, ß→ss)
+  - change code: `CONVERTED_TO_ASCII`
+  - validation code: `NON_ASCII_CHARACTERS`
 
 ### Migration Guide
 
-No migration required! All existing code continues to work:
+No changes required:
 
-```typescript
-// ✅ Still works (no changes needed)
-const result = normaliseEmail('user@gmail.com')
-const validation = validateEmail('user@example.com') 
+```ts
+// still works
+const r = normaliseEmail('user@gmail.com')
+const v = validateEmail('user@example.com')
 
-// 🚀 New optional functionality
-const customResult = normaliseEmail('üser@typo.co', {
+// new options
+const r2 = normaliseEmail('üser@typo.co', {
   asciiOnly: true,
-  fixDomains: { 'typo.co': 'example.com' }
+  fixDomains: { 'typo.co': 'example.com' },
 })
 ```
 
 ## Contributing Guidelines
 
-- Write comprehensive tests for new features
-- Maintain or improve test coverage  
-- Follow existing code patterns and conventions
-- Include JSDoc documentation for public APIs
-- Test in both development and built package scenarios
-- Ensure TypeScript strict mode compliance
-- **New**: Test backward compatibility when adding optional parameters
-- **New**: Include internationalization test cases when relevant
+- Add/maintain tests; don’t regress coverage
+- Follow established patterns & strict TS
+- JSDoc public APIs
+- Test built artefacts too
+- Add i18n/ASCII tests when relevant
+- Validate backward compatibility for option additions
 
 ## Troubleshooting
 
-### Common Issues
-
-**Import Resolution Errors**
+**Import resolution**
 ```bash
-# Rebuild the package
 npm run build
-
-# Reinstall in main project  
 cd ../../ && npm install
 ```
 
-**Type Errors**
+**Type errors**
 ```bash
-# Check TypeScript configuration
 npx tsc --noEmit
-
-# Rebuild type definitions
 npm run build
 ```
 
-**Test Failures**
+**Tests**
 ```bash
-# Run tests with verbose output
 npx vitest run --reporter=verbose
-
-# Run specific test file
 npx vitest run test/specific-test.spec.ts
 ```
 
-### Performance Considerations
+### Performance Notes
 
-- The AI domain suggestions download models (~23MB) on first use
-- Build outputs are optimized for tree-shaking
-- Use specific imports when possible to reduce bundle size
-- Test performance impact in the main application
-
-## Recent Feature Implementation
-
-### Custom Validation Options (Latest Version)
-
-The package now supports comprehensive configuration for both `validateEmail` and `normaliseEmail`:
-
-#### Implementation Highlights
-
-```typescript
-// New EmailValidationOptions type
-export type EmailValidationOptions = {
-  blocklist?: EmailBlockConfig           // Custom blocklist (replaces default)
-  fixDomains?: Record<string, string>    // Custom domain corrections (merges)
-  fixTlds?: Record<string, string>       // Custom TLD corrections (merges)
-  asciiOnly?: boolean                    // ASCII-only validation
-}
-
-// Enhanced function signatures
-validateEmail(email: string, options?: EmailValidationOptions): ValidationResults
-normaliseEmail(email: string, options?: EmailNormOptions): EmailNormResult
-```
-
-#### ASCII-Only Mode Features
-
-- **Transliteration Map**: 30+ character mappings (ü→u, ñ→n, ß→ss, etc.)
-- **Change Tracking**: New `CONVERTED_TO_ASCII` change code
-- **Validation Integration**: New `NON_ASCII_CHARACTERS` validation code
-- **Backward Compatible**: International characters allowed by default
-
-#### Configuration Behavior
-
-- **Domain/TLD Corrections**: Merge with 67+ built-in defaults using spread syntax
-- **Blocklist**: Completely replaces default when provided (no merging)
-- **ASCII Mode**: Disabled by default, enabled via `asciiOnly: true`
-- **Consistent API**: Same options interface for both functions
-
-#### Testing Strategy
-
-- **94 validateEmail tests**: Including 24 new tests for custom options
-- **63 normaliseEmail tests**: Covering ASCII conversion and configuration  
-- **Comprehensive edge cases**: Multiple validation errors, empty options, backward compatibility
-- **Real-world scenarios**: International email addresses, complex configurations
-
-## Architecture Decisions
-
-### Why tsup?
-
-- Fast build times with esbuild
-- Automatic dual package (ESM/CJS) generation
-- Built-in TypeScript support
-- Watch mode for development
-
-### Why Vitest?
-
-- Fast test execution with Vite's transform pipeline
-- Built-in coverage with v8
-- Native ESM support
-- Excellent TypeScript integration
-- jsdom integration for DOM testing
-
-### Package Structure Rationale
-
-- **Separate utilities**: Allow tree-shaking and specific imports
-- **Vue integration**: Composables and directives in separate modules
-- **Comprehensive exports**: Support multiple import patterns
-- **Type safety**: Full TypeScript coverage with strict configuration
+- AI suggestion models download on first use (~23MB)
+- Outputs are tree-shakeable; prefer targeted imports
+- For fuzzy matching thresholds, validate with large candidate sets

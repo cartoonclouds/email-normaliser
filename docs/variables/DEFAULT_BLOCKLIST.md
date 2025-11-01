@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > `const` **DEFAULT\_BLOCKLIST**: [`EmailBlockConfig`](../type-aliases/EmailBlockConfig.md)
 
-Defined in: [utils/email/constants.ts:236](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/constants.ts#L236)
+Defined in: [utils/email/constants.ts:236](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/constants.ts#L236)
 
 Default email blocklist configuration to prevent invalid or unwanted email addresses.
 

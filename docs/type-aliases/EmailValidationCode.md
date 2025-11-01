@@ -1,4 +1,4 @@
-[**@cartoonclouds/contact-normalisers v0.1.0**](../README.md)
+[**@cartoonclouds/email-normaliser v0.1.0**](../README.md)
 
 ***
 
@@ -6,7 +6,7 @@
 
 > **EmailValidationCode** = *typeof* [`EmailValidationCodes`](../variables/EmailValidationCodes.md)\[keyof *typeof* [`EmailValidationCodes`](../variables/EmailValidationCodes.md)\]
 
-Defined in: [utils/email/validateEmail.ts:53](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/contact-normalisers/src/utils/email/validateEmail.ts#L53)
+Defined in: [utils/email/constants.ts:299](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/plugins/email-normaliser/src/utils/email/constants.ts#L299)
 
 Type representing any valid email validation code from the EmailValidationCodes enumeration.
 
