@@ -1,0 +1,7 @@
+export * from './utils/email/constants'
+export * from './utils/email/normaliseEmail'
+export * from './utils/email/validateEmail'
+export * from './utils/email/fuzzyDomainMatching'
+export * from './utils/email/types'
+export * from './composables/useEmail'
+export { default as EmailDirective, type EmailOpts } from './directives/email'

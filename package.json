@@ -1,0 +1,79 @@
+{
+  "name": "@cartoonclouds/email-normaliser",
+  "version": "1.0.0",
+  "description": "Email normalization, validation helpers, Vue directives and composables.",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./utils/email/normaliseEmail": {
+      "types": "./dist/utils/email/normaliseEmail.d.ts",
+      "import": "./dist/utils/email/normaliseEmail.js",
+      "require": "./dist/utils/email/normaliseEmail.cjs"
+    },
+    "./utils/email/validateEmail": {
+      "types": "./dist/utils/email/validateEmail.d.ts",
+      "import": "./dist/utils/email/validateEmail.js",
+      "require": "./dist/utils/email/validateEmail.cjs"
+    },
+    "./utils/email/fuzzyDomainMatching": {
+      "types": "./dist/utils/email/fuzzyDomainMatching.d.ts",
+      "import": "./dist/utils/email/fuzzyDomainMatching.js",
+      "require": "./dist/utils/email/fuzzyDomainMatching.cjs"
+    },
+    "./composables/useEmail": {
+      "types": "./dist/composables/useEmail.d.ts",
+      "import": "./dist/composables/useEmail.js",
+      "require": "./dist/composables/useEmail.cjs"
+    },
+    "./directives/email": {
+      "types": "./dist/directives/email.d.ts",
+      "import": "./dist/directives/email.js",
+      "require": "./dist/directives/email.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown --config tsdown.config.ts",
+    "dev": "tsdown --config tsdown.config.ts --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint --fix .",
+    "docs": "typedoc"
+  },
+  "peerDependencies": {
+    "vue": "3.5.*"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@vitest/coverage-v8": "4.0.15",
+    "jsdom": "27.3.0",
+    "tsdown": "^0.17.3",
+    "typedoc": "0.28.15",
+    "typedoc-plugin-markdown": "4.9.0",
+    "typescript": "5.9.3",
+    "vitest": "4.0.15"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cartoonclouds/email-normaliser.git"
+  },
+  "keywords": [
+    "email",
+    "normalisation",
+    "validation",
+    "vue",
+    "directive",
+    "composable"
+  ]
+}

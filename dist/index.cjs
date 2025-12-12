@@ -1,0 +1,26 @@
+const require_fuzzyDomainMatching = require('./fuzzyDomainMatching-DCcnHhyU.cjs');
+const require_validateEmail = require('./validateEmail-S-Rl1zMd.cjs');
+const require_normaliseEmail = require('./normaliseEmail-gYqVFJ9w.cjs');
+const require_useEmail = require('./useEmail-Dd6gGpZN.cjs');
+const require_email = require('./email-BG1yXSpg.cjs');
+
+exports.DEFAULT_BLOCKLIST = require_fuzzyDomainMatching.DEFAULT_BLOCKLIST;
+exports.DEFAULT_FIX_DOMAINS = require_fuzzyDomainMatching.DEFAULT_FIX_DOMAINS;
+exports.DEFAULT_FIX_TLDS = require_fuzzyDomainMatching.DEFAULT_FIX_TLDS;
+exports.DEFAULT_FUZZY_DOMAIN_CANDIDATES = require_fuzzyDomainMatching.DEFAULT_FUZZY_DOMAIN_CANDIDATES;
+exports.EmailChangeCodes = require_fuzzyDomainMatching.EmailChangeCodes;
+exports.EmailDirective = require_email.email_default;
+exports.EmailValidationCodes = require_fuzzyDomainMatching.EmailValidationCodes;
+exports.TRANSLITERATION_MAP = require_fuzzyDomainMatching.TRANSLITERATION_MAP;
+exports.blocklisted = require_validateEmail.blocklisted;
+exports.changeCodeToReason = require_normaliseEmail.changeCodeToReason;
+exports.checkDomain = require_validateEmail.checkDomain;
+exports.checkTld = require_validateEmail.checkTld;
+exports.findClosestDomain = require_fuzzyDomainMatching.findClosestDomain;
+exports.isEmpty = require_validateEmail.isEmpty;
+exports.levenshtein = require_fuzzyDomainMatching.levenshtein;
+exports.looksLikeEmail = require_validateEmail.looksLikeEmail;
+exports.normaliseEmail = require_normaliseEmail.normaliseEmail;
+exports.useEmail = require_useEmail.useEmail;
+exports.validateEmail = require_validateEmail.validateEmail;
+exports.validationCodeToReason = require_validateEmail.validationCodeToReason;
