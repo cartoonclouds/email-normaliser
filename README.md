@@ -20,6 +20,10 @@ A comprehensive email normalization and validation library with Vue 3 directives
 🏗️ **Centralized Types**: All TypeScript types consolidated in a single, maintainable location  
 🛠️ **Robust Testing**: Advanced mock strategies for complex third-party integrations  
 
+## Browser Support
+
+The distributed bundles target **ES2018** to ensure compatibility with the latest stable releases of Chrome, Edge, Firefox, and Safari on desktop and mobile. A `browserslist` entry (`>0.5%, last 2 versions, Firefox ESR, not dead`) is included in `package.json` so downstream tooling (Autoprefixer, Babel, Vite, etc.) can automatically align CSS and polyfill decisions with the same set of evergreen browsers. No DOM APIs outside this support window are used; if you need to reach very old browsers, add polyfills for `CustomEvent` and `EventTarget` before registering the Vue directive.
+
 ## Installation
 
 ```bash

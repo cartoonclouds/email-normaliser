@@ -1,4 +1,5 @@
 // Removed Vue type imports to avoid type conflicts between different Vue installations
+import { getDocument } from '../utils/dom/utils'
 import {
   DEFAULT_BLOCKLIST,
   DEFAULT_FIX_DOMAINS,
@@ -90,9 +91,11 @@ function resolve(
     },
   }
 
+  const doc = getDocument()
   const previewEl: HTMLElement | null = value.previewSelector
     ? (el.closest('form')?.querySelector(value.previewSelector) ??
-      document.querySelector(value.previewSelector))
+      doc?.querySelector(value.previewSelector) ??
+      null)
     : null
 
   return {

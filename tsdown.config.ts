@@ -15,5 +15,5 @@ export default defineConfig({
   },
   treeshake: true,
   minify: false,
-  target: 'es2020',
+  target: 'es2018',
 })

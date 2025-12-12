@@ -1,3 +1,4 @@
+import { getConsole } from '../dom/utils'
 import {
   DEFAULT_BLOCKLIST,
   DEFAULT_FIX_DOMAINS,
@@ -248,10 +249,12 @@ export function changeCodeToReason(code: EmailChangeCode): string | null {
     case EmailChangeCodes.CONVERTED_TO_ASCII:
       return 'Converted non-ASCII characters to ASCII.'
 
-    default:
-      globalThis.console.warn(`Unknown email change code: ${code as string}`)
+    default: {
+      // Guarded so legacy browsers without console objects do not throw.
+      getConsole()?.warn(`Unknown email change code: ${code as string}`)
 
       return null
+    }
   }
 }
 
