@@ -1,0 +1,48 @@
+**@cartoonclouds/email-normaliser v1.0.0**
+
+***
+
+# @cartoonclouds/email-normaliser v1.0.0
+
+## Type Aliases
+
+- [ClosestDomainResult](type-aliases/ClosestDomainResult.md)
+- [DomainCandidate](type-aliases/DomainCandidate.md)
+- [EmailBlockConfig](type-aliases/EmailBlockConfig.md)
+- [EmailChangeCode](type-aliases/EmailChangeCode.md)
+- [EmailFixResult](type-aliases/EmailFixResult.md)
+- [EmailNormOptions](type-aliases/EmailNormOptions.md)
+- [EmailNormResult](type-aliases/EmailNormResult.md)
+- [EmailOpts](type-aliases/EmailOpts.md)
+- [EmailValidationCode](type-aliases/EmailValidationCode.md)
+- [EmailValidationOptions](type-aliases/EmailValidationOptions.md)
+- [FindClosestOptions](type-aliases/FindClosestOptions.md)
+- [UseEmailOptions](type-aliases/UseEmailOptions.md)
+- [ValidationResult](type-aliases/ValidationResult.md)
+- [ValidationResults](type-aliases/ValidationResults.md)
+
+## Variables
+
+- [DEFAULT\_BLOCKLIST](variables/DEFAULT_BLOCKLIST.md)
+- [DEFAULT\_FIX\_DOMAINS](variables/DEFAULT_FIX_DOMAINS.md)
+- [DEFAULT\_FIX\_TLDS](variables/DEFAULT_FIX_TLDS.md)
+- [DEFAULT\_FUZZY\_DOMAIN\_CANDIDATES](variables/DEFAULT_FUZZY_DOMAIN_CANDIDATES.md)
+- [EmailChangeCodes](variables/EmailChangeCodes.md)
+- [EmailDirective](variables/EmailDirective.md)
+- [EmailValidationCodes](variables/EmailValidationCodes.md)
+- [TRANSLITERATION\_MAP](variables/TRANSLITERATION_MAP.md)
+
+## Functions
+
+- [blocklisted](functions/blocklisted.md)
+- [changeCodeToReason](functions/changeCodeToReason.md)
+- [checkDomain](functions/checkDomain.md)
+- [checkTld](functions/checkTld.md)
+- [findClosestDomain](functions/findClosestDomain.md)
+- [isEmpty](functions/isEmpty.md)
+- [levenshtein](functions/levenshtein.md)
+- [looksLikeEmail](functions/looksLikeEmail.md)
+- [normaliseEmail](functions/normaliseEmail.md)
+- [useEmail](functions/useEmail.md)
+- [validateEmail](functions/validateEmail.md)
+- [validationCodeToReason](functions/validationCodeToReason.md)
