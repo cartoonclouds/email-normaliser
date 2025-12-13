@@ -6,7 +6,7 @@
 
 > **EmailDirective**: `object`
 
-Defined in: [directives/email.ts:138](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/email-normaliser/src/directives/email.ts#L138)
+Defined in: [directives/email.ts:141](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/email-normaliser/src/directives/email.ts#L141)
 
 Vue directive for normalizing and validating email inputs.
 

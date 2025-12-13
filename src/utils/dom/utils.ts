@@ -1,3 +1,8 @@
+/**
+ * Get the global document object if available.
+ *
+ * @returns The global Document object or null if not available.
+ */
 export function getDocument(): Document | null {
   if (typeof globalThis !== 'undefined' && globalThis.document) {
     return globalThis.document
@@ -10,6 +15,11 @@ export function getDocument(): Document | null {
   return null
 }
 
+/**
+ * Get the global console object if available.
+ *
+ * @returns The global Console object or null if not available.
+ */
 export function getConsole(): Console | null {
   if (typeof globalThis !== 'undefined' && globalThis.console) {
     return globalThis.console

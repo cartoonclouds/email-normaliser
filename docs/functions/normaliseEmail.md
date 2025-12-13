@@ -6,7 +6,7 @@
 
 > **normaliseEmail**(`raw`, `options`): [`EmailNormResult`](../type-aliases/EmailNormResult.md)
 
-Defined in: [utils/email/normaliseEmail.ts:346](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/email-normaliser/src/utils/email/normaliseEmail.ts#L346)
+Defined in: [utils/email/normaliseEmail.ts:349](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/email-normaliser/src/utils/email/normaliseEmail.ts#L349)
 
 Normalise and validate an email address.
 

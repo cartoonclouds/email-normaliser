@@ -6,7 +6,7 @@
 
 > **EmailOpts** = [`EmailNormOptions`](EmailNormOptions.md) & `object`
 
-Defined in: [directives/email.ts:17](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/email-normaliser/src/directives/email.ts#L17)
+Defined in: [directives/email.ts:18](https://gitlab.com/good-life/glp-frontend/-/blob/main/packages/email-normaliser/src/directives/email.ts#L18)
 
 Email directive configurations
 
